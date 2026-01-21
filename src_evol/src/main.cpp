@@ -923,6 +923,14 @@ void ResultsDisplay(TSearch &s)
 // ------------------------------------
 int main (int argc, const char* argv[])
 {
+    // check that argv[1] has been provided
+    if (argc < 2){
+        // send an error message to the terminal
+        std::cerr << "Error: missing random seed.\n"
+                  << "Usage: " << argv[0] << " <random seed>\n";
+        return 1;
+    }
+
     long randomseed = static_cast<long>(time(NULL));
     randomseed += atoi(argv[1]);
     std::string current_run = argv[1];

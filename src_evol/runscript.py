@@ -1,3 +1,8 @@
+###############################################
+# runs the program many times 
+# and reports how long it takes to complete
+###############################################
+
 import os
 import sys
 
