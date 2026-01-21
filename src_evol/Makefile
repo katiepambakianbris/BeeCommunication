@@ -1,14 +1,45 @@
-main: main.o CTRNN.o TSearch.o CountingAgent.o random.o
-	g++ -pthread -o main main.o CTRNN.o TSearch.o CountingAgent.o random.o
-random.o: random.cpp random.h VectorMatrix.h
-	g++ -pthread -c -O3 random.cpp
-CTRNN.o: CTRNN.cpp random.h CTRNN.h
-	g++ -pthread -c -O3 CTRNN.cpp
-TSearch.o: TSearch.cpp TSearch.h
-	g++ -pthread -c -O3 TSearch.cpp
-CountingAgent.o: CountingAgent.cpp CountingAgent.h TSearch.h CTRNN.h random.h VectorMatrix.h
-	g++ -pthread -c -O3 CountingAgent.cpp
-main.o: main.cpp CTRNN.h CountingAgent.h TSearch.h
-	g++ -pthread -c -O3 main.cpp
+.PHONY: clean
+
+CXX = g++
+# should i put some compiler flags in?
+CXXFLAGS = -pthread -O3 -Iinclude
+
+SRCDIR = src
+OBJDIR = build
+BINDIR = bin
+
+TARGET = $(BINDIR)/main
+
+OBJS = \
+	$(OBJDIR)/main.o \
+	$(OBJDIR)/CTRNN.o \
+	$(OBJDIR)/TSearch.o \
+	$(OBJDIR)/CountingAgent.o \
+	$(OBJDIR)/random.o
+
+$(TARGET): $(OBJS)
+	mkdir -p $(BINDIR)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS)
+
+$(OBJDIR)/main.o: $(SRCDIR)/main.cpp include/CTRNN.h include/CountingAgent.h include/TSearch.h
+	mkdir -p $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJDIR)/CTRNN.o: $(SRCDIR)/CTRNN.cpp include/CTRNN.h include/random.h
+	mkdir -p $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJDIR)/TSearch.o: $(SRCDIR)/TSearch.cpp include/TSearch.h
+	mkdir -p $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJDIR)/CountingAgent.o: $(SRCDIR)/CountingAgent.cpp include/CountingAgent.h include/TSearch.h include/CTRNN.h include/random.h include/VectorMatrix.h
+	mkdir -p $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJDIR)/random.o: $(SRCDIR)/random.cpp include/random.h include/VectorMatrix.h
+	mkdir -p $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
 clean:
-	rm *.o main
+	rm -f *.o main
