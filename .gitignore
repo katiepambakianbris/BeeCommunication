@@ -4,3 +4,5 @@
 main
 bin/
 build/
+.venv
+results/

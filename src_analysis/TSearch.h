@@ -73,9 +73,9 @@ class TSearch {
 		// Basic Accessors
 		int VectorSize(void) {return vectorSize;};
 		void SetVectorSize(int NewSize);
-    void SetRandomSeed(long seed) {rs.SetRandomSeed(seed);};
-	void SetDir(string newdir) {Dir = newdir;};
-	void SetCurrentRun(string run) {Current_Run = run;};
+		void SetRandomSeed(long seed) {rs.SetRandomSeed(seed);};
+		void SetDir(string newdir) {Dir = newdir;};
+		void SetCurrentRun(string run) {Current_Run = run;};
 		// Search Mode Accessors
 		TSelectionMode SelectionMode(void) {return SelectMode;};
 		void SetSelectionMode(TSelectionMode newmode) {SelectMode = newmode;};

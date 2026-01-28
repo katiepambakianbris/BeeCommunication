@@ -33,6 +33,7 @@ TSearch::TSearch(int VSize, double (*EvalFn)(TVector<double> &, RandomState &))
 	new_handler OldHandler;
 	OldHandler = set_new_handler(OutOfMemoryHandler);
 	if (OldHandler != NULL) set_new_handler(OldHandler);
+	
 	// Initialize internal state
 	SearchInitialized = 0;
 	// Initialize function pointers
@@ -304,9 +305,11 @@ void TSearch::DoSearch(int ResumeFlag)
 		BestPerf = -1;
 		UpdateBestFlag = 0;
 	}
+
 	// Update and display statistics of the initial population
 	UpdatePopulationStatistics();
 	DisplayPopulationStatistics();
+
 	// If the best changed and there is a BestActionFunction, invoke it
 	if (UpdateBestFlag && BestActionFunction != NULL)
 		(*BestActionFunction)(Gen,bestVector);
@@ -384,19 +387,36 @@ void TSearch::UpdatePopulationStatistics(void)
 	// Collect various info about the current population
 	MinPerf = 1E10;
 	MaxPerf = -1E10;
-	for (i = 1; i <= Population.Size(); i++)
-	{
+	for (i = 1; i <= Population.Size(); i++){
 		perf = Perf[i];
 		// Update MinPerformance and MaxPerformance as necessary
-		if (perf > MaxPerf) {MaxPerf = perf; bestindex = i;}
-		if (perf < MinPerf) MinPerf = perf;
+
+		// if the the fitness of i is greater than what we thought was the best 
+		// update it to be the best
+		if (perf > MaxPerf) {
+			MaxPerf = perf; 
+			bestindex = i;
+		}
+
+		// if the the fitness of i is worse than what we thought was the worst 
+		// update it to be the worst
+		if (perf < MinPerf){ 
+			MinPerf = perf;
+		}
 		// Update total
 		total += perf;
 	}
+
 	// Update AveragePerformance (with protection from possible numerical errors)
 	AvgPerf = total/Population.Size();
-	if (AvgPerf < MinPerf) AvgPerf = MinPerf;
-	if (AvgPerf > MaxPerf) AvgPerf = MaxPerf;
+	if (AvgPerf < MinPerf){
+		AvgPerf = MinPerf;
+	}
+
+	if (AvgPerf > MaxPerf){
+		AvgPerf = MaxPerf;
+	}
+
 	// Update PerformanceVariance
 	if (Population.Size() > 1)
 	{
@@ -407,7 +427,9 @@ void TSearch::UpdatePopulationStatistics(void)
 		}
 		PerfVar = total/(Population.Size()-1);
 	}
+
 	else PerfVar = 0.0;
+
 	// If the best performance has improved or ReEvalFlag is set, update BestPerf and BestVector
 	if ((MaxPerf > BestPerf) || ReEvalFlag)
 	{
@@ -418,7 +440,7 @@ void TSearch::UpdatePopulationStatistics(void)
 }
 
 
-// Display population statistics
+// Display population statistics to the terminal
 
 void TSearch::DisplayPopulationStatistics(void)
 {
@@ -471,60 +493,74 @@ int TSearch::SearchTerminated(void)
 // Evaluate the given vector
 // Note that negative performances are treated as 0
 
-double TSearch::EvaluateVector(TVector<double> &v, RandomState &rs)
-{
-	double perf = (*EvaluationFunction)(v, rs);
-
-	return (perf<0)?0:perf;
+double TSearch::EvaluateVector(TVector<double> &v, RandomState &rs){
+	// evaluate the genome v, with random state rs + return a fitness value
+	double fitness = (*EvaluationFunction)(v, rs);
+	// clamp negative to 0
+	return (fitness<0)?0:fitness;
 }
 
 
-// Evaluate a population range
+// Evaluate a population range/slice of the population (for multithreading)
 
-void *EvaluatePopulationRange(void *arg)
-{
-  PopRangeSpec *prs = (PopRangeSpec *)arg;
-  TSearch *s = prs->search;
-  for (int i = prs->start; i <= prs->end; i++)
-    s->Perf[i] = s->EvaluateVector(s->Population[i], s->RandomStates[i]);
-  pthread_exit(NULL);
+void *EvaluatePopulationRange(void *arg){
+	PopRangeSpec *prs = (PopRangeSpec *)arg;
+	TSearch *s = prs->search;
+
+	// for each thread evaluate its assigned chunk of individuals
+	for (int i = prs->start; i <= prs->end; i++)
+		s->Perf[i] = s->EvaluateVector(
+			s->Population[i], 
+			s->RandomStates[i]
+		);
+	
+	pthread_exit(NULL);
 }
 
 
 // Evaluate the current population, beginning with the STARTth individual
-
+// start - allows you to re-evaulate part of the pop
 void TSearch::EvaluatePopulation(int start)
 {
-#ifdef THREADED_SEARCH  // Evaluate the population in parallel
-  // Create threads
-  if (THREAD_COUNT > 1) {
-    int NumIndividuals = (PopulationSize() - start + 1)/THREAD_COUNT;
-    pthread_t threads[THREAD_COUNT-1];
-    PopRangeSpec psrs[THREAD_COUNT-1];
-    int rc;
-    for (int i = 1; i <= THREAD_COUNT - 1; i++) {
-      psrs[i-1].search = this;
-      psrs[i-1].start = (i-1)*NumIndividuals + start;
-      psrs[i-1].end = i*NumIndividuals + start - 1;
-      rc  = pthread_create(&threads[i-1], NULL, EvaluatePopulationRange, (void *)&psrs[i-1]);
-      if (rc) {cerr << "Thread creation failed: " << rc << endl; exit(-1);}
-    }
-    // Evaluate the remaining individuals in the main thread
-    for (int i = (THREAD_COUNT - 1)*NumIndividuals + start; i <= PopulationSize(); i++)
-      Perf[i] = EvaluateVector(Population[i], RandomStates[i]);
-    // Wait for all other threads to complete
-    int status;
-    for (int i = 0; i <= THREAD_COUNT-2; i++)
-      pthread_join(threads[i], (void **)&status);
-  }
-  else
-    for (int i = start; i <= Population.Size(); i++)
-      Perf[i] = EvaluateVector(Population[i], RandomStates[i]);
+	#ifdef THREADED_SEARCH  // Evaluate the population in parallel
+		// Create threads
+		if (THREAD_COUNT > 1) {
+			// number of individuals per thread
+			int NumIndividuals = (PopulationSize() - start + 1)/THREAD_COUNT;
 
-#else // Evaluate the population serially
-	for (int i = start; i <= Population.Size(); i++)
-		Perf[i] = EvaluateVector(Population[i], RandomStates[i]);
-#endif
+			// create threads
+			pthread_t threads[THREAD_COUNT-1];
+			PopRangeSpec psrs[THREAD_COUNT-1];
+
+			// define each threads individuals
+			int rc;
+			for (int i = 1; i <= THREAD_COUNT - 1; i++) {
+				psrs[i-1].search = this;
+				psrs[i-1].start = (i-1)*NumIndividuals + start;
+				psrs[i-1].end = i*NumIndividuals + start - 1;
+				rc  = pthread_create(&threads[i-1], NULL, EvaluatePopulationRange, (void *)&psrs[i-1]);
+				if (rc) {cerr << "Thread creation failed: " << rc << endl; exit(-1);}
+			}
+
+			// Evaluate the remaining individuals in the main thread
+			for (int i = (THREAD_COUNT - 1)*NumIndividuals + start; i <= PopulationSize(); i++){
+				Perf[i] = EvaluateVector(Population[i], RandomStates[i]);
+			}
+
+			// Wait for all other threads to complete
+			int status;
+			for (int i = 0; i <= THREAD_COUNT-2; i++)
+			// Synchronisation
+			pthread_join(threads[i], (void **)&status);
+		}
+		else
+			for (int i = start; i <= Population.Size(); i++)
+			Perf[i] = EvaluateVector(Population[i], RandomStates[i]);
+
+	#else // Evaluate the population serially
+		for (int i = start; i <= Population.Size(); i++)
+			Perf[i] = EvaluateVector(Population[i], RandomStates[i]);
+	#endif
 }
 
 
@@ -846,68 +882,68 @@ void TSearch::SortPopulation(void)
 
 void TSearch::WriteCheckpointFile(void)
 {
-  ofstream bofs("search.cpt", ios::binary);
-  int i;
-  double d;
+	ofstream bofs("search.cpt", ios::binary);
+	int i;
+	double d;
 
 	// Write the vector size and population size
-  bofs.write((const char*) &(vectorSize), sizeof(vectorSize));
-  i = PopulationSize();
-  bofs.write((const char*) &(i), sizeof(i));
-	// Write the generation number and the maximum number of generations
-  bofs.write((const char*) &(Gen), sizeof(Gen));
-  bofs.write((const char*) &(MaxGens), sizeof(MaxGens));
-	// Write the random state
-	rs.BinaryWriteRandomState(bofs);
-	// Write the selection mode
-	switch (SelectMode) {
-		case FITNESS_PROPORTIONATE: i = 1; break;
-		case RANK_BASED: i = 2; break;
-		default: cerr << "Invalid selection mode" << endl; exit(0);
-	}
-  bofs.write((const char*) &(i), sizeof(i));
-	// Write the reproduction mode
-	switch (RepMode) {
-		case HILL_CLIMBING: i = 1; break;
-		case GENETIC_ALGORITHM: i = 2; break;
-		default: cerr << "Invalid reproduction mode" << endl; exit(0);
-	}
-  bofs.write((const char*) &(i), sizeof(i));
-	// Write the crossover mode
-	switch (CrossMode) {
-		case UNIFORM: i = 1; break;
-		case TWO_POINT: i = 2; break;
-		default: cerr << "Invalid crossover mode" << endl; exit(0);
-	}
-  bofs.write((const char*) &(i), sizeof(i));
+	bofs.write((const char*) &(vectorSize), sizeof(vectorSize));
+	i = PopulationSize();
+	bofs.write((const char*) &(i), sizeof(i));
+		// Write the generation number and the maximum number of generations
+	bofs.write((const char*) &(Gen), sizeof(Gen));
+	bofs.write((const char*) &(MaxGens), sizeof(MaxGens));
+		// Write the random state
+		rs.BinaryWriteRandomState(bofs);
+		// Write the selection mode
+		switch (SelectMode) {
+			case FITNESS_PROPORTIONATE: i = 1; break;
+			case RANK_BASED: i = 2; break;
+			default: cerr << "Invalid selection mode" << endl; exit(0);
+		}
+	bofs.write((const char*) &(i), sizeof(i));
+		// Write the reproduction mode
+		switch (RepMode) {
+			case HILL_CLIMBING: i = 1; break;
+			case GENETIC_ALGORITHM: i = 2; break;
+			default: cerr << "Invalid reproduction mode" << endl; exit(0);
+		}
+	bofs.write((const char*) &(i), sizeof(i));
+		// Write the crossover mode
+		switch (CrossMode) {
+			case UNIFORM: i = 1; break;
+			case TWO_POINT: i = 2; break;
+			default: cerr << "Invalid crossover mode" << endl; exit(0);
+		}
+	bofs.write((const char*) &(i), sizeof(i));
 	// Write the search initialized and re-evaluation flags, and the checkpoint frequency
-  bofs.write((const char*) &(SearchInitialized), sizeof(SearchInitialized));
-  bofs.write((const char*) &(ReEvalFlag), sizeof(ReEvalFlag));
-  bofs.write((const char*) &(CheckpointInt), sizeof(CheckpointInt));
-	// Write the search constraint vector
-  ConstraintVector.BinaryWriteVector(bofs);
-	// Write the mutation variance
-  bofs.write((const char*) &(MutationVar), sizeof(MutationVar));
-	// Write the crossover probability
-  bofs.write((const char*) &(CrossProb), sizeof(CrossProb));
-	// Write the crossover template
-  crossTemplate.BinaryWriteVector(bofs);
-	// Write the elitist fraction
-	bofs.write((const char*) &(EFraction), sizeof(EFraction));
-	// Write the max expected offspring
-  bofs.write((const char*) &(MaxExpOffspring), sizeof(MaxExpOffspring));
-	// Write out the peformance and parameter vector of the best individual
-  bofs.write((const char*) &(BestPerf), sizeof(BestPerf));
-  bestVector.BinaryWriteVector(bofs);
-	// Write out the performance and parameter vector of each individual in the population
-  for (int i = 1; i <= PopulationSize(); i++) {
-    d = Performance(i);
-    bofs.write((const char*) &(d), sizeof(d));
-    Individual(i).BinaryWriteVector(bofs);
-  }
-  // Write out the random state for each individual in the population
-  for (int i = 1; i <= PopulationSize(); i++)
-    RandomStates[i].BinaryWriteRandomState(bofs);
+	bofs.write((const char*) &(SearchInitialized), sizeof(SearchInitialized));
+	bofs.write((const char*) &(ReEvalFlag), sizeof(ReEvalFlag));
+	bofs.write((const char*) &(CheckpointInt), sizeof(CheckpointInt));
+		// Write the search constraint vector
+	ConstraintVector.BinaryWriteVector(bofs);
+		// Write the mutation variance
+	bofs.write((const char*) &(MutationVar), sizeof(MutationVar));
+		// Write the crossover probability
+	bofs.write((const char*) &(CrossProb), sizeof(CrossProb));
+		// Write the crossover template
+	crossTemplate.BinaryWriteVector(bofs);
+		// Write the elitist fraction
+		bofs.write((const char*) &(EFraction), sizeof(EFraction));
+		// Write the max expected offspring
+	bofs.write((const char*) &(MaxExpOffspring), sizeof(MaxExpOffspring));
+		// Write out the peformance and parameter vector of the best individual
+	bofs.write((const char*) &(BestPerf), sizeof(BestPerf));
+	bestVector.BinaryWriteVector(bofs);
+		// Write out the performance and parameter vector of each individual in the population
+	for (int i = 1; i <= PopulationSize(); i++) {
+		d = Performance(i);
+		bofs.write((const char*) &(d), sizeof(d));
+		Individual(i).BinaryWriteVector(bofs);
+	}
+	// Write out the random state for each individual in the population
+	for (int i = 1; i <= PopulationSize(); i++)
+		RandomStates[i].BinaryWriteRandomState(bofs);
 }
 
 

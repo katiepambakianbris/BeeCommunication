@@ -266,7 +266,7 @@ double RecordBehavior(TVector<double> genotype, std::string current_run) //, Ran
 int main (int argc, const char* argv[])
 {
     std::string current_run = argv[1];
-    ifstream genefile;
+    ifstream genefile; // opens the file
     genefile.open("best_gen_" + current_run + ".dat");
     TVector<double> genotype(1, VectSize);
     genefile >> genotype;

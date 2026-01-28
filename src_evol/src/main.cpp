@@ -899,13 +899,17 @@ void ResultsDisplay(TSearch &s)
     CountingAgent AgentSignaler( N, phenotypeS);
 
     // Send to file
+    BestIndividualFile << "Nervous System:" << endl;
     BestIndividualFile << AgentSignaler.NervousSystem << endl;
+    BestIndividualFile << "Food Sensor Weights:" << endl;
     BestIndividualFile << AgentSignaler.foodsensorweights << "\n" << endl;
+    BestIndividualFile << "Landmark Sensor Weights:" << endl;
     BestIndividualFile << AgentSignaler.landmarksensorweights << "\n" << endl;
+    BestIndividualFile << "Other Sensor Weights:" << endl;
     BestIndividualFile << AgentSignaler.othersensorweights << "\n" << endl;
     BestIndividualFile.close();
 
-    // Show the Signaler
+    // Show the Reciever
     BestIndividualFile.open(dir + "best_ns_r_" + current_run + ".dat");
     CountingAgent AgentReceiver( N, phenotypeR);
 
@@ -931,67 +935,70 @@ int main (int argc, const char* argv[])
         return 1;
     }
 
+    // Define output
+    std::string dir = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/";
+
+    std::string current_run = argv[1];
+
+    // Random seed -> unique to each run
     long randomseed = static_cast<long>(time(NULL));
     randomseed += atoi(argv[1]);
-    std::string current_run = argv[1];
-    std::string dir = "/Users/eduardoizquierdo/Dropbox/Research/Communication/E3N4/";
-//"/Users/edizquie/Documents/GitHub/BeeCommunication/E1/";
-
-    TSearch s(VectSize);
-
-    #ifdef PRINTOFILE
-
-    ofstream file;
-    file.open  (dir + "evol_" + current_run + ".dat");
-    cout.rdbuf(file.rdbuf());
-
     // save the seed to a file
     ofstream seedfile;
     seedfile.open (dir + "seed_" + current_run + ".dat");
     seedfile << randomseed << endl;
     seedfile.close();
-    
+
+    // if logging is enabled
+    #ifdef PRINTOFILE
+        // redirect all output to that file
+        ofstream file;
+        file.open  (dir + "evol_" + current_run + ".dat");
+        cout.rdbuf(file.rdbuf());
     #endif
+
+    // Create the search Object with length VectSize
+    TSearch search(VectSize);
     
     // Configure the search
-    s.SetRandomSeed(randomseed);
-    s.SetDir(dir);
-    s.SetCurrentRun(current_run);
-    s.SetSearchResultsDisplayFunction(ResultsDisplay);
-    s.SetPopulationStatisticsDisplayFunction(EvolutionaryRunDisplay);
-    s.SetSelectionMode(RANK_BASED);
-    s.SetReproductionMode(GENETIC_ALGORITHM);
-    s.SetPopulationSize(POPSIZE);
-    s.SetMaxGenerations(GENS);
-    s.SetCrossoverProbability(CROSSPROB);
-    s.SetCrossoverMode(UNIFORM);
-    s.SetMutationVariance(MUTVAR);
-    s.SetMaxExpectedOffspring(EXPECTED);
-    s.SetElitistFraction(ELITISM);
-    s.SetSearchConstraint(1);
+    search.SetRandomSeed(randomseed);
+    search.SetDir(dir);
+    search.SetCurrentRun(current_run);
+    search.SetSearchResultsDisplayFunction(ResultsDisplay);
+    search.SetPopulationStatisticsDisplayFunction(EvolutionaryRunDisplay);
+    search.SetSelectionMode(RANK_BASED);
+    search.SetReproductionMode(GENETIC_ALGORITHM);
+    search.SetPopulationSize(POPSIZE);
+    search.SetMaxGenerations(GENS);
+    search.SetCrossoverProbability(CROSSPROB);
+    search.SetCrossoverMode(UNIFORM);
+    search.SetMutationVariance(MUTVAR);
+    search.SetMaxExpectedOffspring(EXPECTED);
+    search.SetElitistFraction(ELITISM);
+    search.SetSearchConstraint(1);
 
     /* Initialize and seed the search */
-    s.InitializeSearch();
+    search.InitializeSearch();
     
     /* Evolve */
-    s.SetSearchTerminationFunction(TerminationFunction);
-    s.SetEvaluationFunction(FitnessFunction1);
-    s.ExecuteSearch();
+    search.SetSearchTerminationFunction(TerminationFunction);
+    search.SetEvaluationFunction(FitnessFunction1);
+    search.ExecuteSearch();
 
-    s.SetSearchTerminationFunction(TerminationFunction);
-    s.SetEvaluationFunction(FitnessFunction2);
-    s.ExecuteSearch();
+    // search.SetSearchTerminationFunction(TerminationFunction);
+    // search.SetEvaluationFunction(FitnessFunction2);
+    // search.ExecuteSearch();
 
-    s.SetSearchTerminationFunction(TerminationFunction);
-    s.SetEvaluationFunction(FitnessFunction3);
-    s.ExecuteSearch();
+    // search.SetSearchTerminationFunction(TerminationFunction);
+    // search.SetEvaluationFunction(FitnessFunction3);
+    // search.ExecuteSearch();
 
-    s.SetSearchTerminationFunction(NULL);
-    s.SetEvaluationFunction(FitnessFunction4);
-    s.ExecuteSearch();
+    // search.SetSearchTerminationFunction(NULL);
+    // search.SetEvaluationFunction(FitnessFunction4);
+    // search.ExecuteSearch();
 
-    if (s.BestPerformance() > 0.99) {
-        RecordBehavior(s);
+    if (search.BestPerformance() > 0.99) {
+        RecordBehavior(search);
     }
 
     #ifdef PRINTTOFILE
