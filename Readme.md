@@ -47,7 +47,7 @@ BeeCommunication
 | File | Description |
 | ---- | ----------- |
 | seed_x | The seed of the run x |
-| evol_x | |
+| evol_x | Tracks each of the evolutions. Outputs the Generation, the best fitness and average fitness |
 | best_gen_x | The genotype of the best individual in the population in run x | 
 | best_ns_r_x | Save the phenotype of the best Reciever |
 | best_ns_s_x | Save the phenotype of the best Signaler |
