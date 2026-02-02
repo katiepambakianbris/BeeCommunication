@@ -936,7 +936,7 @@ int main (int argc, const char* argv[])
     }
 
     // Define output
-    std::string dir = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/";
+    std::string dir = "/user/home/yj23812/BeeCommunication/results/";
 
     std::string current_run = argv[1];
 
@@ -985,17 +985,17 @@ int main (int argc, const char* argv[])
     search.SetEvaluationFunction(FitnessFunction1);
     search.ExecuteSearch();
 
-    // search.SetSearchTerminationFunction(TerminationFunction);
-    // search.SetEvaluationFunction(FitnessFunction2);
-    // search.ExecuteSearch();
+    search.SetSearchTerminationFunction(TerminationFunction);
+    search.SetEvaluationFunction(FitnessFunction2);
+    search.ExecuteSearch();
 
-    // search.SetSearchTerminationFunction(TerminationFunction);
-    // search.SetEvaluationFunction(FitnessFunction3);
-    // search.ExecuteSearch();
+    search.SetSearchTerminationFunction(TerminationFunction);
+    search.SetEvaluationFunction(FitnessFunction3);
+    search.ExecuteSearch();
 
-    // search.SetSearchTerminationFunction(NULL);
-    // search.SetEvaluationFunction(FitnessFunction4);
-    // search.ExecuteSearch();
+    search.SetSearchTerminationFunction(NULL);
+    search.SetEvaluationFunction(FitnessFunction4);
+    search.ExecuteSearch();
 
     if (search.BestPerformance() > 0.99) {
         RecordBehavior(search);
