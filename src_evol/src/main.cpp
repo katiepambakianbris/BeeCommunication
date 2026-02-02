@@ -91,13 +91,14 @@ double FitnessFunction1(TVector<double> &genotype, RandomState &rs)
     phenotypeS.SetBounds(1, (int)(VectSize/2));
     GenPhenMapping(genotype, phenotypeS, 1);
 
+    // construct the signaller agent
     CountingAgent AgentSignaler( N, phenotypeS);
 
     // Save state
     TVector<double> savedstateS;
     savedstateS.SetBounds(1,N);
 
-    // Keep track of performance
+    // Keep track of performance (fitness across landmarks/env)
     double totaltrials = 0;
     double totaltime;
     double distS;
@@ -105,10 +106,14 @@ double FitnessFunction1(TVector<double> &genotype, RandomState &rs)
     double totalfitS = 0.0;
     double food_loc, food_loc_mod;
     double fitS;
+
+    // ************************
+    // Set up Landmarks
+    // ************************
+
     double ref = 10;
     double sep = 10;
 
-    // Landmarks and variations
     TVector<double> landmarkPositions;
     landmarkPositions.SetBounds(1,LN);  // [30, 45, 60..]
     for (int i = 1; i <= LN; i += 1)
@@ -120,14 +125,25 @@ double FitnessFunction1(TVector<double> &genotype, RandomState &rs)
     landmarkPositionTest.SetBounds(1,LN);  
     
     // Use this to save the neural state during learning
+
+    // loop through different enviornment 
+    // for each enviornment i, landmark i has the food 
     for (int env = 1; env <= LN; env += 1)
     {
+        // *******************
+        // 1. FORAGING PHASE
+        // *******************
+
+        // Step 1: Setup
+
         // Establish food location
         food_loc = landmarkPositions[env];
-
-        // 1. FORAGING PHASE
-        AgentSignaler.ResetPosition(0);
+    
+        // reset position + neural state of the signaller
+        AgentSignaler.ResetPosition(0); 
         AgentSignaler.ResetNeuralState();
+
+        // Step 2: Loop
         for (double time = 0; time < RunDuration; time += StepSize)
         {
             AgentSignaler.SenseFood(food_loc);
