@@ -1058,7 +1058,8 @@ int main (int argc, const char* argv[])
 
     // Define output home directory
     int v = 0;
-    std::string base = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/"+ date_as_string() +"/v";
+    std::string dir = "/user/home/yj23812/BeeCommunication/results/"+ date_as_string() +"/v";
+    // std::string base = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/"+ date_as_string() +"/v";
 
     std::string result_dir = base + std::to_string(v) +"/";
     while(std::filesystem::exists(result_dir)){
