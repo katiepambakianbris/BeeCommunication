@@ -8,7 +8,7 @@
 #include <filesystem>
 #include <fstream>
 
-// #define PRINTOFILE
+// #define PRINTTOFILE
 
 // Task params
 const int LN = 3;                   // Number of landmarks in the environment
@@ -21,6 +21,7 @@ const double mindist = 5.0;
 // EA params
 const int POPSIZE = 96; //96;
 const int GENS = 10000; //10000;
+// const int GENS=10;
 const double MUTVAR = 0.01; //0.05;
 const double CROSSPROB = 0.5;
 const double EXPECTED = 1.1;
@@ -36,6 +37,10 @@ const double TMAX = 16.0;
 
 // Genotype size
 int VectSize = 2 * (N*N + 5*N);  // Double the amount of parameters, one for Receiver, one for Signaler
+
+// landmark parameters 
+double REF = 10;
+double SEP = 10;
 
 // ------------------------------------
 // Genotype-Phenotype Mapping Functions
@@ -115,14 +120,11 @@ double FitnessFunction1(TVector<double> &genotype, RandomState &rs)
     // Set up Landmarks
     // ************************
 
-    double ref = 10;
-    double sep = 10;
-
     TVector<double> landmarkPositions;
     landmarkPositions.SetBounds(1,LN);  // [30, 45, 60..]
     for (int i = 1; i <= LN; i += 1)
     {
-        landmarkPositions[i] = ref + (i * sep);
+        landmarkPositions[i] = REF + (i * SEP);
     }
 
     TVector<double> landmarkPositionTest;
@@ -178,7 +180,7 @@ double FitnessFunction1(TVector<double> &genotype, RandomState &rs)
             {
                 for (int i = 1; i <= LN; i += 1)
                 {
-                    landmarkPositionTest[i] = (ref + ref_var) + (i * (sep + sep_var));
+                    landmarkPositionTest[i] = (REF + ref_var) + (i * (SEP + sep_var));
                 }
                 food_loc_mod = landmarkPositionTest[env];
 
@@ -255,15 +257,13 @@ double FitnessFunction2(TVector<double> &genotype, RandomState &rs)
     double totalfitR = 0.0, totalfitS = 0.0;
     double food_loc, food_loc_mod;
     double fitR, fitS;
-    double ref = 10;
-    double sep = 10;
 
     // Landmarks and variations
     TVector<double> landmarkPositions;
     landmarkPositions.SetBounds(1,LN);  // [30, 45, 60..]
     for (int i = 1; i <= LN; i += 1)
     {
-        landmarkPositions[i] = ref + (i * sep);
+        landmarkPositions[i] = REF + (i * SEP);
     }
 
     TVector<double> landmarkPositionTest;
@@ -314,7 +314,7 @@ double FitnessFunction2(TVector<double> &genotype, RandomState &rs)
             {
                 for (int i = 1; i <= LN; i += 1)
                 {
-                    landmarkPositionTest[i] = (ref + ref_var) + (i * (sep + sep_var));
+                    landmarkPositionTest[i] = (REF + ref_var) + (i * (SEP + sep_var));
                 }
                 food_loc_mod = landmarkPositionTest[env];
 
@@ -408,15 +408,13 @@ double FitnessFunction3(TVector<double> &genotype, RandomState &rs)
     double totalfitR = 0.0, totalfitS = 0.0;
     double food_loc, food_loc_mod;
     double fitR, fitS;
-    double ref = 10;
-    double sep = 10;
 
     // Landmarks and variations
     TVector<double> landmarkPositions;
     landmarkPositions.SetBounds(1,LN);  // [30, 45, 60..]
     for (int i = 1; i <= LN; i += 1)
     {
-        landmarkPositions[i] = ref + (i * sep);
+        landmarkPositions[i] = REF + (i * SEP);
     }
 
     TVector<double> landmarkPositionTest;
@@ -467,7 +465,7 @@ double FitnessFunction3(TVector<double> &genotype, RandomState &rs)
             {
                 for (int i = 1; i <= LN; i += 1)
                 {
-                    landmarkPositionTest[i] = (ref + ref_var) + (i * (sep + sep_var));
+                    landmarkPositionTest[i] = (REF + ref_var) + (i * (SEP + sep_var));
                 }
                 food_loc_mod = landmarkPositionTest[env];
 
@@ -561,15 +559,14 @@ double FitnessFunction4(TVector<double> &genotype, RandomState &rs)
     double totalfitR = 0.0, totalfitS = 0.0;
     double food_loc, food_loc_mod;
     double fitR, fitS;
-    double ref = 10;
-    double sep = 10;
+
 
     // Landmarks and variations
     TVector<double> landmarkPositions;
     landmarkPositions.SetBounds(1,LN);  // [30, 45, 60..]
     for (int i = 1; i <= LN; i += 1)
     {
-        landmarkPositions[i] = ref + (i * sep);
+        landmarkPositions[i] = REF + (i * SEP);
     }
 
     TVector<double> landmarkPositionTest;
@@ -620,7 +617,7 @@ double FitnessFunction4(TVector<double> &genotype, RandomState &rs)
             {
                 for (int i = 1; i <= LN; i += 1)
                 {
-                    landmarkPositionTest[i] = (ref + ref_var) + (i * (sep + sep_var));
+                    landmarkPositionTest[i] = (REF + ref_var) + (i * (SEP + sep_var));
                 }
                 food_loc_mod = landmarkPositionTest[env];
 
@@ -689,15 +686,14 @@ double FitnessFunction4(TVector<double> &genotype, RandomState &rs)
 // Fitness function
 // Landmarks vary position by small amount
 // ------------------------------------
-double RecordBehavior(TSearch &s) //, RandomState &rs)
-{
+double RecordBehavior(TSearch &s) {
     std::string current_run = s.CurrentRun();
     std::string dir = s.Directory();
     
+    // Map genotype to phenotype
     TVector<double> genotype;
     genotype = s.BestIndividual();
 
-    // Map genotype to phenotype
     TVector<double> phenotypeS, phenotypeR;
     phenotypeS.SetBounds(1, (int)(VectSize/2));
     phenotypeR.SetBounds(1, (int)(VectSize/2));
@@ -712,31 +708,34 @@ double RecordBehavior(TSearch &s) //, RandomState &rs)
     savedstateR.SetBounds(1,N);
     savedstateS.SetBounds(1,N);
 
-    // Keep track of performance
+    // Bookeeping variables
     double totaltrials = 0;
+    double totalfitR = 0.0, totalfitS = 0.0;
+    double fitR, fitS;
+
     double totaltime;
     double distR, distS;
     double totaldistR, totaldistS;
-    double totalfitR = 0.0, totalfitS = 0.0;
-    double food_loc, food_loc_mod;
-    double fitR, fitS;
-    double ref = 10;
-    double sep = 10;
 
-    // Landmarks and variations
+    double food_loc, food_loc_mod;
+
+    // Landmarks base position and variations
     TVector<double> landmarkPositions;
     landmarkPositions.SetBounds(1,LN);  // [30, 45, 60..]
-    for (int i = 1; i <= LN; i += 1)
-    {
-        landmarkPositions[i] = ref + (i * sep);
+    for (int i = 1; i <= LN; i += 1){
+        landmarkPositions[i] = REF + (i * SEP);
     }
 
     TVector<double> landmarkPositionTest;
-    landmarkPositionTest.SetBounds(1,LN);  
-    
+    landmarkPositionTest.SetBounds(1,LN);
+
+    // Phase
+
+    enum Phase {FORAGE = 0, RECRUIT = 1, TEST = 2};
+    const int NPHASES = 3;
+
     // Use this to save the neural state during learning
-    for (int env = 1; env <= LN; env += 1)
-    {
+    for (int env = 1; env <= LN; env += 1){
         std::string s_env = std::to_string(env);
         ofstream SignalerBehaviorFile1, ReceiverBehaviorFile1;
         SignalerBehaviorFile1.open( dir + "behavior_Signaler_" + current_run + "_Env" + s_env + "_Phase1.dat");
@@ -747,6 +746,12 @@ double RecordBehavior(TSearch &s) //, RandomState &rs)
         ofstream SignalerBehaviorFile3, ReceiverBehaviorFile3;
         SignalerBehaviorFile3.open( dir + "behavior_Signaler_" + current_run + "_Env" + s_env + "_Phase3.dat");
         ReceiverBehaviorFile3.open( dir + "behavior_Receiver_" + current_run + "_Env" + s_env + "_Phase3.dat");
+
+        // stores the location of the landmarks and the food
+        ofstream LandmarkFile1, LandmarkFile2, LandmarkFile3;
+        LandmarkFile1.open(dir + "landmark_location_"+current_run+"_env"+s_env+"_phase1.dat");
+        LandmarkFile2.open(dir + "landmark_location_"+current_run+"_env"+s_env+"_phase2.dat");
+        LandmarkFile3.open(dir + "landmark_location_"+current_run+"_env"+s_env+"_phase3.dat");
 
         // TEST USING DIFFERENT DISTANCES BETWEEN LANDMARKS
         for (double ref_var = -2.0; ref_var <= 2.0; ref_var += 1.0)
@@ -762,6 +767,12 @@ double RecordBehavior(TSearch &s) //, RandomState &rs)
 
                 SignalerBehaviorFile1 << AgentSignaler.Position() << " ";
                 ReceiverBehaviorFile1 << 0.0 << " ";
+
+                // write the landmarks to the output
+                for (int i = 1; i <= LN; i += 1){
+                    LandmarkFile1 << landmarkPositions[i] << " ";
+                }
+                LandmarkFile1 << food_loc << " ";
 
                 for (double time = 0; time < RunDuration; time += StepSize)
                 {
@@ -780,6 +791,13 @@ double RecordBehavior(TSearch &s) //, RandomState &rs)
 
                 SignalerBehaviorFile2 << AgentSignaler.Position() << " ";
                 ReceiverBehaviorFile2 << AgentReceiver.Position() << " ";
+
+                // write the landmarks to the output
+                for (int i = 1; i <= LN; i += 1){
+                    LandmarkFile2 << landmarkPositions[i] << " ";
+                }
+                LandmarkFile2 << food_loc << " ";
+
                 for (double time = 0; time < RunDuration; time += StepSize)
                 {
                     AgentSignaler.SenseOther(AgentReceiver.pos);
@@ -794,7 +812,7 @@ double RecordBehavior(TSearch &s) //, RandomState &rs)
 
                 for (int i = 1; i <= LN; i += 1)
                 {
-                    landmarkPositionTest[i] = (ref + ref_var) + (i * (sep + sep_var));
+                    landmarkPositionTest[i] = (REF + ref_var) + (i * (SEP + sep_var));
                 }
                 food_loc_mod = landmarkPositionTest[env];
 
@@ -809,6 +827,12 @@ double RecordBehavior(TSearch &s) //, RandomState &rs)
         
                 SignalerBehaviorFile3 << AgentSignaler.Position() << " ";
                 ReceiverBehaviorFile3 << AgentReceiver.Position() << " ";
+
+                // write the landmarks to the output
+                for (int i = 1; i <= LN; i += 1){
+                    LandmarkFile3 << landmarkPositionTest[i] << " ";
+                }
+                LandmarkFile3 << food_loc_mod << " ";
 
                 for (double time = 0; time < RunDuration; time += StepSize)
                 {
@@ -860,7 +884,12 @@ double RecordBehavior(TSearch &s) //, RandomState &rs)
                 SignalerBehaviorFile3 << endl;
                 ReceiverBehaviorFile3 << endl;
 
-            }   
+                LandmarkFile1 << endl;
+                LandmarkFile2 << endl;
+                LandmarkFile3 << endl;
+            
+            }
+
         }
         SignalerBehaviorFile1.close();
         ReceiverBehaviorFile1.close();
@@ -952,6 +981,16 @@ std::string date_as_string(){
     return oss.str();
 }
 
+std::string date_time_as_string(){
+    std::time_t t = std::time(nullptr);
+    std::tm tm = *std::localtime(&t);
+
+    std::ostringstream oss;
+    oss << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S");
+    // oss << std::put_time(&tm, "%Y-%m-%d");
+    return oss.str();
+}
+
 void output_config(std::string dir, std::string run, std::string batch){
     // open the file
     ofstream configfile;
@@ -960,7 +999,7 @@ void output_config(std::string dir, std::string run, std::string batch){
     // print the run information
     configfile << "*********CONFIG FILE *********" << "\n" << "\n"
             << "*********Housekeeping Info*********" << "\n" << "\n"
-            << "Date of experiement: " << date_as_string() << "\n" << "\n"
+            << "Date of experiement: " << date_time_as_string() << "\n" << "\n"
             << "Run number " << run << " as part of slurm batch "+ batch << "\n" << "\n"
             << "*********Parameter Info*********" << "\n" << "\n"
             << "LN: " << LN << "\n"
@@ -976,13 +1015,17 @@ void output_config(std::string dir, std::string run, std::string batch){
             << "Crossover Probability: " << CROSSPROB << "\n"
             << "Expected: " << EXPECTED << "\n"
             << "Elitism: " << ELITISM << "\n"
-            << "\n Nervious System Parameters"
+            << "\n*********Nervious System Parameters*********"
             << "N: " << N << "\n"
             << "WR: " << WR << "\n"
             << "SR: " << SR << "\n"
             << "BR: " << BR << "\n"
             << "TMIN: " << TMIN << "\n"
             << "TMAX: " << TMAX << "\n"
+            << "\n*********Landmark Parameters*********"
+            << "Sep " << SEP << "\n"
+            << "Ref " << REF << "\n"
+            << "\n"
             ;
     configfile.close();
 }
@@ -997,7 +1040,7 @@ int main (int argc, const char* argv[])
     // ######################
     // Setup
     // ######################
-    #ifdef PRINTOFILE
+    #ifdef PRINTTOFILE
         std::cout << "PRINTOFILE is ON\n";
     #else
         std::cout << "PRINTOFILE is OFF\n";
@@ -1009,19 +1052,31 @@ int main (int argc, const char* argv[])
         std::cerr << "Error: missing run or array index number.\n";
         return 1;
     }
+
+    std::string batch_number = argv[2];
+    std::string current_run = argv[1];
+
     // Define output home directory
-    std::string result_dir =  "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/";
-    std::string dir = result_dir + date_as_string() +"/batch_"+ argv[2] +"/run_"+ argv[1] +"/";
+    int v = 0;
+    std::string base = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/"+ date_as_string() +"/v";
+
+    std::string result_dir = base + std::to_string(v) +"/";
+    while(std::filesystem::exists(result_dir)){
+        v++;
+        result_dir = base + std::to_string(v) +"/";
+    }
+
+    std::string dir = result_dir +"/batch_"+ batch_number +"/run_"+ current_run +"/";
     // there is not acutally an error here
     std::filesystem::create_directories(dir);
 
     // print to the config file
-    output_config(dir, argv[1], argv[2]);
-
-    std::string current_run = argv[1];
+    output_config(dir, current_run, batch_number);
+    
     // Random seed -> unique to each run
     long randomseed = static_cast<long>(time(NULL));
     randomseed += atoi(argv[1]);
+
     // save the seed to a file
     ofstream seedfile;
     seedfile.open (dir + "seed_" + current_run + ".dat");
@@ -1029,7 +1084,7 @@ int main (int argc, const char* argv[])
     seedfile.close();
 
     // if logging is enabled
-    #ifdef PRINTOFILE
+    #ifdef PRINTTOFILE
         // redirect all output to that file
         ofstream file;
         file.open  (dir + "evol_" + current_run + ".dat");
@@ -1056,13 +1111,13 @@ int main (int argc, const char* argv[])
     search.SetElitistFraction(ELITISM);
     search.SetSearchConstraint(1);
 
-    // /* Initialize and seed the search */
-    // search.InitializeSearch();
+    /* Initialize and seed the search */
+    search.InitializeSearch();
     
-    // /* Evolve */
-    // search.SetSearchTerminationFunction(TerminationFunction);
-    // search.SetEvaluationFunction(FitnessFunction1);
-    // search.ExecuteSearch();
+    /* Evolve */
+    search.SetSearchTerminationFunction(TerminationFunction);
+    search.SetEvaluationFunction(FitnessFunction1);
+    search.ExecuteSearch();
 
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(FitnessFunction2);
@@ -1081,7 +1136,7 @@ int main (int argc, const char* argv[])
     }
 
     #ifdef PRINTTOFILE
-        evolfile.close();
+        file.close();
     #endif
 
     return 0;

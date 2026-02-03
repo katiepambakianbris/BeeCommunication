@@ -2,7 +2,7 @@
 
 CXX = g++
 # should i put some compiler flags in?
-CXXFLAGS = -std=c++20 -DPRINTOFILE -pthread -O3 -Iinclude
+CXXFLAGS = -std=c++20 -pthread -O3 -Iinclude
 
 SRCDIR = src
 OBJDIR = build

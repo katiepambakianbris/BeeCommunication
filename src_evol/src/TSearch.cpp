@@ -308,6 +308,7 @@ void TSearch::DoSearch(int ResumeFlag)
 
 	// Update and display statistics of the initial population
 	UpdatePopulationStatistics();
+	// writes to the evol file
 	DisplayPopulationStatistics();
 
 	// If the best changed and there is a BestActionFunction, invoke it
@@ -320,6 +321,7 @@ void TSearch::DoSearch(int ResumeFlag)
 		UpdateBestFlag = 0;
 		ReproducePopulation();
 		UpdatePopulationStatistics();
+		// writes to the evol file
 		DisplayPopulationStatistics();
 		// If the best changed and there is a BestActionFunction, invoke it
 		if (UpdateBestFlag && BestActionFunction != NULL)
@@ -444,6 +446,7 @@ void TSearch::UpdatePopulationStatistics(void)
 
 void TSearch::DisplayPopulationStatistics(void)
 {
+	// print to the Evol file for the run
 	if (PopulationStatisticsDisplayFunction != NULL)
 		(*PopulationStatisticsDisplayFunction)(Gen,BestPerf,AvgPerf,PerfVar);
 	else {
