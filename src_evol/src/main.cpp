@@ -1064,17 +1064,17 @@ int main (int argc, const char* argv[])
     // search.SetEvaluationFunction(FitnessFunction1);
     // search.ExecuteSearch();
 
-    // search.SetSearchTerminationFunction(TerminationFunction);
-    // search.SetEvaluationFunction(FitnessFunction2);
-    // search.ExecuteSearch();
+    search.SetSearchTerminationFunction(TerminationFunction);
+    search.SetEvaluationFunction(FitnessFunction2);
+    search.ExecuteSearch();
 
-    // search.SetSearchTerminationFunction(TerminationFunction);
-    // search.SetEvaluationFunction(FitnessFunction3);
-    // search.ExecuteSearch();
+    search.SetSearchTerminationFunction(TerminationFunction);
+    search.SetEvaluationFunction(FitnessFunction3);
+    search.ExecuteSearch();
 
-    // search.SetSearchTerminationFunction(NULL);
-    // search.SetEvaluationFunction(FitnessFunction4);
-    // search.ExecuteSearch();
+    search.SetSearchTerminationFunction(NULL);
+    search.SetEvaluationFunction(FitnessFunction4);
+    search.ExecuteSearch();
 
     if (search.BestPerformance() > 0.99) {
         RecordBehavior(search);
