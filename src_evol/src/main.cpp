@@ -3,8 +3,12 @@
 #include "CountingAgent.h"
 #include "CTRNN.h"
 #include "random.h"
+#include <ctime> 
+#include <sstream>
+#include <filesystem>
+#include <fstream>
 
-#define PRINTOFILE
+// #define PRINTOFILE
 
 // Task params
 const int LN = 3;                   // Number of landmarks in the environment
@@ -23,7 +27,7 @@ const double EXPECTED = 1.1;
 const double ELITISM = 0.02;
 
 // Nervous system params
-const int N = 4;
+const int N = 3;
 const double WR = 10.0;     
 const double SR = 10.0;     
 const double BR = 10.0;     
@@ -938,24 +942,83 @@ void ResultsDisplay(TSearch &s)
 
 }
 
+std::string date_as_string(){
+    std::time_t t = std::time(nullptr);
+    std::tm tm = *std::localtime(&t);
+
+    std::ostringstream oss;
+    // oss << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S");
+    oss << std::put_time(&tm, "%Y-%m-%d");
+    return oss.str();
+}
+
+void output_config(std::string dir, std::string run, std::string batch){
+    // open the file
+    ofstream configfile;
+    configfile.open (dir + "config_" + run + ".dat");
+
+    // print the run information
+    configfile << "*********CONFIG FILE *********" << "\n" << "\n"
+            << "*********Housekeeping Info*********" << "\n" << "\n"
+            << "Date of experiement: " << date_as_string() << "\n" << "\n"
+            << "Run number " << run << " as part of slurm batch "+ batch << "\n" << "\n"
+            << "*********Parameter Info*********" << "\n" << "\n"
+            << "LN: " << LN << "\n"
+            << "StepSize: " << StepSize << "\n"
+            << "RunDuration: " <<  RunDuration << "\n"
+            << "TransDuration: " << TransDuration << "\n"
+            << "Min Length: " << MinLength << "\n"
+            << "mindist: " << mindist << "\n"
+            << "\n"
+            << "Population Size: " << POPSIZE << "\n"
+            << "Num Generations: " << GENS << "\n"
+            << "Mutation rate: " << MUTVAR << "\n"
+            << "Crossover Probability: " << CROSSPROB << "\n"
+            << "Expected: " << EXPECTED << "\n"
+            << "Elitism: " << ELITISM << "\n"
+            << "\n Nervious System Parameters"
+            << "N: " << N << "\n"
+            << "WR: " << WR << "\n"
+            << "SR: " << SR << "\n"
+            << "BR: " << BR << "\n"
+            << "TMIN: " << TMIN << "\n"
+            << "TMAX: " << TMAX << "\n"
+            ;
+    configfile.close();
+}
+
+
 // ------------------------------------
 // The main program
 // ------------------------------------
+// takes 2 arguments: run number and array index
 int main (int argc, const char* argv[])
 {
+    // ######################
+    // Setup
+    // ######################
+    #ifdef PRINTOFILE
+        std::cout << "PRINTOFILE is ON\n";
+    #else
+        std::cout << "PRINTOFILE is OFF\n";
+    #endif
+
     // check that argv[1] has been provided
-    if (argc < 2){
+    if (argc < 3){
         // send an error message to the terminal
-        std::cerr << "Error: missing random seed.\n"
-                  << "Usage: " << argv[0] << " <random seed>\n";
+        std::cerr << "Error: missing run or array index number.\n";
         return 1;
     }
+    // Define output home directory
+    std::string result_dir =  "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/";
+    std::string dir = result_dir + date_as_string() +"/batch_"+ argv[2] +"/run_"+ argv[1] +"/";
+    // there is not acutally an error here
+    std::filesystem::create_directories(dir);
 
-    // Define output
-    std::string dir = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/";
+    // print to the config file
+    output_config(dir, argv[1], argv[2]);
 
     std::string current_run = argv[1];
-
     // Random seed -> unique to each run
     long randomseed = static_cast<long>(time(NULL));
     randomseed += atoi(argv[1]);
@@ -993,13 +1056,13 @@ int main (int argc, const char* argv[])
     search.SetElitistFraction(ELITISM);
     search.SetSearchConstraint(1);
 
-    /* Initialize and seed the search */
-    search.InitializeSearch();
+    // /* Initialize and seed the search */
+    // search.InitializeSearch();
     
-    /* Evolve */
-    search.SetSearchTerminationFunction(TerminationFunction);
-    search.SetEvaluationFunction(FitnessFunction1);
-    search.ExecuteSearch();
+    // /* Evolve */
+    // search.SetSearchTerminationFunction(TerminationFunction);
+    // search.SetEvaluationFunction(FitnessFunction1);
+    // search.ExecuteSearch();
 
     // search.SetSearchTerminationFunction(TerminationFunction);
     // search.SetEvaluationFunction(FitnessFunction2);

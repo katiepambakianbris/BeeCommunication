@@ -9,12 +9,14 @@
 import os
 import sys
 
-fromR = int(sys.argv[1])
+fromR = int(sys.argv[1]) 
 toR = int(sys.argv[2])
-program = sys.argv[3]
+array_index = int(sys.argv[3])
+program = sys.argv[4]
 
 currentpath = os.getcwd()
 
 for k in range(fromR,toR):
     print(k)
-    os.system('time ./'+program+" "+str(k))
+    # time main trail_number slurm_array_index
+    os.system('time ./'+program+" "+str(k) + " "+ str(array_index))
