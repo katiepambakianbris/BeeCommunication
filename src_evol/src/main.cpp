@@ -3,12 +3,12 @@
 #include "CountingAgent.h"
 #include "CTRNN.h"
 #include "random.h"
-#include <ctime> 
+#include <iomanip> 
 #include <sstream>
 #include <filesystem>
 #include <fstream>
 
-// #define PRINTTOFILE
+#define PRINTTOFILE
 
 // Task params
 const int LN = 3;                   // Number of landmarks in the environment
@@ -977,7 +977,7 @@ std::string date_as_string(){
 
     std::ostringstream oss;
     // oss << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S");
-    oss << std::put_time(&tm, "%Y-%m-%d");
+    oss << put_time(&tm, "%Y-%m-%d");
     return oss.str();
 }
 
@@ -986,7 +986,7 @@ std::string date_time_as_string(){
     std::tm tm = *std::localtime(&t);
 
     std::ostringstream oss;
-    oss << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S");
+    oss << put_time(&tm, "%Y-%m-%d_%H-%M-%S");
     // oss << std::put_time(&tm, "%Y-%m-%d");
     return oss.str();
 }
@@ -1015,14 +1015,14 @@ void output_config(std::string dir, std::string run, std::string batch){
             << "Crossover Probability: " << CROSSPROB << "\n"
             << "Expected: " << EXPECTED << "\n"
             << "Elitism: " << ELITISM << "\n"
-            << "\n*********Nervious System Parameters*********"
+            << "\n*********Nervious System Parameters*********\n"
             << "N: " << N << "\n"
             << "WR: " << WR << "\n"
             << "SR: " << SR << "\n"
             << "BR: " << BR << "\n"
             << "TMIN: " << TMIN << "\n"
             << "TMAX: " << TMAX << "\n"
-            << "\n*********Landmark Parameters*********"
+            << "\n*********Landmark Parameters*********\n"
             << "Sep " << SEP << "\n"
             << "Ref " << REF << "\n"
             << "\n"
@@ -1040,32 +1040,20 @@ int main (int argc, const char* argv[])
     // ######################
     // Setup
     // ######################
-    #ifdef PRINTTOFILE
-        std::cout << "PRINTOFILE is ON\n";
-    #else
-        std::cout << "PRINTOFILE is OFF\n";
-    #endif
-
     // check that argv[1] has been provided
     if (argc < 3){
         // send an error message to the terminal
         std::cerr << "Error: missing run or array index number.\n";
         return 1;
     }
-
+    std::string slurm_job_id = argv[3];
     std::string batch_number = argv[2];
     std::string current_run = argv[1];
 
     // Define output home directory
     int v = 0;
-    std::string dir = "/user/home/yj23812/BeeCommunication/results/"+ date_as_string() +"/v";
+    std::string result_dir = "/user/home/yj23812/BeeCommunication/results/"+ date_as_string() +"/" + slurm_job_id;
     // std::string base = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/"+ date_as_string() +"/v";
-
-    std::string result_dir = base + std::to_string(v) +"/";
-    while(std::filesystem::exists(result_dir)){
-        v++;
-        result_dir = base + std::to_string(v) +"/";
-    }
 
     std::string dir = result_dir +"/batch_"+ batch_number +"/run_"+ current_run +"/";
     // there is not acutally an error here

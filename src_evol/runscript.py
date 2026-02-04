@@ -12,11 +12,12 @@ import sys
 fromR = int(sys.argv[1]) 
 toR = int(sys.argv[2])
 array_index = int(sys.argv[3])
-program = sys.argv[4]
+slurm_job_id = int(sys.argv[4])
+program = sys.argv[5]
 
 currentpath = os.getcwd()
 
 for k in range(fromR,toR):
     print(k)
     # time main trail_number slurm_array_index
-    os.system('time ./'+program+" "+str(k) + " "+ str(array_index))
+    os.system('time ./'+program+" "+str(k) + " "+ str(array_index) +" " + str(slurm_job_id))

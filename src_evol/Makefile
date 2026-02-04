@@ -2,7 +2,10 @@
 
 CXX = g++
 # should i put some compiler flags in?
-CXXFLAGS = -std=c++20 -pthread -O3 -Iinclude
+CXXFLAGS = -std=c++17 -pthread -O3 -Iinclude
+
+# you need to link the file system
+LDFLAGS = -lstdc++fs
 
 SRCDIR = src
 OBJDIR = build
@@ -19,7 +22,7 @@ OBJS = \
 
 $(TARGET): $(OBJS)
 	mkdir -p $(BINDIR)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LDFLAGS)
 
 $(OBJDIR)/main.o: $(SRCDIR)/main.cpp include/CTRNN.h include/CountingAgent.h include/TSearch.h
 	mkdir -p $(OBJDIR)
