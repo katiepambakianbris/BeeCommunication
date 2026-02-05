@@ -4,8 +4,19 @@ CXX = g++
 # should i put some compiler flags in?
 CXXFLAGS = -std=c++17 -pthread -O3 -Iinclude
 
+GCC_VERSION := $(shell g++ -dumpversion | cut -d. -f1)
+
 # you need to link the file system
-LDFLAGS = -lstdc++fs
+# if the gcc version is < 9 need to link the filesystems library
+
+ifeq ($shell test $(GCC_VERSION -lt 9 && echo yes), yes)
+	echo "linking filesystems"
+	FS_LIB := -lstdc++fs
+else
+    FS_LIB :=
+endif
+
+LDFLAGS += $(FS_LIB)
 
 SRCDIR = src
 OBJDIR = build

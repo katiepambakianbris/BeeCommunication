@@ -89,6 +89,42 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen, int k)
     }    
 }
 
+
+// ------------------------------------
+// Stages of each of the tasks
+// -----------------------------------
+
+// takes in the:
+// agents
+// landmarks
+// 
+// void stage1(){
+
+//     // *******************
+//     // 1. FORAGING PHASE
+//     // *******************
+
+//     // Step 1: Setup
+
+//     // Establish food location
+//     food_loc = landmarkPositions[env];
+
+//     // reset position + neural state of the signaller
+//     AgentSignaler.ResetPosition(0); 
+//     AgentSignaler.ResetNeuralState();
+
+//     // Step 2: Loop
+//     for (double time = 0; time < RunDuration; time += StepSize)
+//     {
+//         AgentSignaler.SenseFood(food_loc);
+//         AgentSignaler.SenseLandmarks(LN,landmarkPositions);
+//         AgentSignaler.Step(StepSize);
+//     }
+//     AgentSignaler.ResetSensors();
+
+// }
+
+
 // ------------------------------------
 // Fitness function
 // Landmarks vary position by small amount
@@ -963,9 +999,13 @@ void ResultsDisplay(TSearch &s)
     CountingAgent AgentReceiver( N, phenotypeR);
 
     // Send to file
+    BestIndividualFile << "Nervous System:" << endl;
     BestIndividualFile << AgentReceiver.NervousSystem << endl;
+    BestIndividualFile << "Food Sensor Weights:" << endl;
     BestIndividualFile << AgentReceiver.foodsensorweights << "\n" << endl;
+    BestIndividualFile << "Landmark Sensor Weights:" << endl;
     BestIndividualFile << AgentReceiver.landmarksensorweights << "\n" << endl;
+    BestIndividualFile << "Other Sensor Weights:" << endl;
     BestIndividualFile << AgentReceiver.othersensorweights << "\n" << endl;
     BestIndividualFile.close();
 
@@ -1052,8 +1092,8 @@ int main (int argc, const char* argv[])
 
     // Define output home directory
     int v = 0;
-    std::string result_dir = "/user/home/yj23812/BeeCommunication/results/"+ date_as_string() +"/" + slurm_job_id;
-    // std::string base = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/"+ date_as_string() +"/v";
+    // std::string result_dir = "/user/home/yj23812/BeeCommunication/results/"+ date_as_string() +"/" + slurm_job_id;
+    std::string result_dir = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/"+ date_as_string() +"/v";
 
     std::string dir = result_dir +"/batch_"+ batch_number +"/run_"+ current_run +"/";
     // there is not acutally an error here
@@ -1101,24 +1141,38 @@ int main (int argc, const char* argv[])
     search.SetSearchConstraint(1);
 
     /* Initialize and seed the search */
+    // get a random population
     search.InitializeSearch();
     
     /* Evolve */
+    // are the neural states transfered between each stageof the evolution -> not currently
+
+    std::cout << "starting evolution - starting fitness function 1" << "\n";
+
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(FitnessFunction1);
     search.ExecuteSearch();
+
+    std::cout << "starting fitness function 2" << "\n";
 
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(FitnessFunction2);
     search.ExecuteSearch();
 
+    std::cout << "starting fitness function 3" << "\n";
+
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(FitnessFunction3);
     search.ExecuteSearch();
 
+    std::cout << "starting fitness function 4" << "\n";
+
     search.SetSearchTerminationFunction(NULL);
     search.SetEvaluationFunction(FitnessFunction4);
     search.ExecuteSearch();
+
+    std::cout << "Evolution complete" << "\n";
+    std::cout << "Best evolution " << search.BestPerformance() << "\n";
 
     if (search.BestPerformance() > 0.99) {
         RecordBehavior(search);
