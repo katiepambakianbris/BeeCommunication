@@ -11,6 +11,7 @@
 #SBATCH --array=0-19
 
 # run this script from the root BeeCommunication directory
+# sbatch scripts/bee-script.sh
 
 module add languages/python/3.12.3
  

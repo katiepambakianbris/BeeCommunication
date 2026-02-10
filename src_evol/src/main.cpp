@@ -454,6 +454,9 @@ double stage3(TVector<double> &genotype, RandomState &rs){
             AgentReceiver.SenseFood(food_location);
             AgentReceiver.SenseLandmarks(LN, landmarkPositions);
 
+            AgentSignaler.Step(StepSize);
+            AgentReceiver.Step(StepSize);
+
             // get the absolute distance to the food
             distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
             total_score_receiver = hard_score(distance_food_receiver);
@@ -617,6 +620,9 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
                 AgentReceiver.SenseOther(AgentSignaler.pos);
                 AgentReceiver.SenseFood(food_location);
                 AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+
+                AgentSignaler.Step(StepSize);
+                AgentReceiver.Step(StepSize);
 
                 SignalerBehaviorFile3 << AgentSignaler.GetPosition() << " ";
                 ReceiverBehaviorFile3 << AgentReceiver.GetPosition() << " ";
@@ -819,8 +825,8 @@ int main (int argc, const char* argv[])
 
     // Define output home directory
     int v = 0;
-    // std::string result_dir = "/user/home/yj23812/BeeCommunication/results/"+ date_as_string() +"/" + slurm_job_id;
-    std::string result_dir = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/"+ date_as_string() +"/v";
+    std::string result_dir = "/user/home/yj23812/BeeCommunication/results/"+ date_as_string() +"/" + slurm_job_id;
+    // std::string result_dir = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/"+ date_as_string() +"/v";
 
     std::string dir = result_dir +"/batch_"+ batch_number +"/run_"+ current_run +"/";
     // there is not acutally an error here
