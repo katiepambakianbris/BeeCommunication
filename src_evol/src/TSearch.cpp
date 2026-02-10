@@ -118,7 +118,7 @@ void TSearch::SetPopulationSize(int NewSize)
   RandomStates.SetSize(NewSize);
   for (int i = 1; i <= NewSize; i++)
     //RandomStates[i].SetRandomSeed(rs.UniformRandomInteger(1,LONG_MAX));
-		RandomStates[i].SetRandomSeed(rs.UniformRandomInteger(1,(int)(pow(2,sizeof(int)-1))));
+	RandomStates[i].SetRandomSeed(rs.UniformRandomInteger(1,(int)(pow(2,sizeof(int)-1))));
 }
 
 

@@ -131,11 +131,15 @@ class TSearch {
 		void InitializeSearch(void);
 		void ExecuteSearch(void);
 		void ResumeSearch(void);
+		// added
+		RandomState& getRandomState(){return rs;};
+
 		// Input and output
     void WriteCheckpointFile(void);
     void ReadCheckpointFile(void);
     //friend ostream& operator<<(ostream& os, TSearch& s);
 		//friend istream& operator>>(istream& is, TSearch& s);
+	
 
 	private:
 		// Helper Methods
