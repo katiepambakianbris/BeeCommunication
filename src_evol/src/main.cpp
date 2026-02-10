@@ -110,7 +110,7 @@ TVector<double> genLandmarks_LeapFrog(RandomState &rs, TVector<double> &landmark
     int max = lenLandmarkZone / N;
 
     int y = rs.UniformRandom(0,max);
-    int x0 = rs.UniformRandom(0,y);
+    int x0 = rs.UniformRandom(0,y) + LANDMARKZONESTART;
 
     landmarkPositions[1] = x0;
 
@@ -185,7 +185,7 @@ double hard_score(double distance){
 
 // ---------------------------------------------------------
 // stage 1: Evolution of receiver
-// only looking a the distance between the receiver and the 
+// only looking at the distance between the receiver and the 
 // flower/food
 // no signaller in the task
 // the sensor of the receiver is set to correspond to which
@@ -469,7 +469,7 @@ double stage3(TVector<double> &genotype, RandomState &rs){
 
 // ------------------------------------------
 // For the Best Genotype record the behaviour
-// using the same steps as in stage 3
+// using the same steps as in stage 3 -> but i think i want to do all the tasks so edit this
 // ------------------------------------------
 double RecordBehavior(TSearch &s, RandomState &rs) {
     std::string current_run = s.CurrentRun();
@@ -504,44 +504,154 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
 
     // Generate landmarks (using leapfrog method)
     TVector<double> landmarkPositions;
-    genLandmarks_LeapFrog(rs, landmarkPositions);
 
-    enum Phase {stage1 = 0, stage2 = 1, stage3 = 2};
-    const int NPHASES = 3;
+    // **** create the files to save the behaviour/env ***
+    // storing them all in the same file, each gets a new line (so 9 trials per file)
+    // the stages are separated into three files
+    ofstream SignalerBehaviorFile1, ReceiverBehaviorFile1, SignalerBehaviorFile2, ReceiverBehaviorFile2,SignalerBehaviorFile3, ReceiverBehaviorFile3;
+    SignalerBehaviorFile1.open( dir + "behavior_Signaler_stage1_" + current_run);
+    ReceiverBehaviorFile1.open( dir + "behavior_Receiver_stage1_" + current_run);
+    SignalerBehaviorFile2.open( dir + "behavior_Signaler_stage2_" + current_run);
+    ReceiverBehaviorFile2.open( dir + "behavior_Receiver_stage2_" + current_run);
+    SignalerBehaviorFile3.open( dir + "behavior_Signaler_stage3_" + current_run);
+    ReceiverBehaviorFile3.open( dir + "behavior_Receiver_stage3_" + current_run);
+    
+    // stores the location of the landmarks and the food -> this is each line 
+    ofstream LandmarkFile;
+    LandmarkFile.open(dir + "landmark_location_stage1_"+current_run);
 
     // set each of the landmarks to be the location of the food
     for (int env =1; env<=LN;env++){
-        // **** create the files to save the behaviour/env ***
-
-        std::string s_env = std::to_string(env);
-        ofstream SignalerBehaviorFile1, ReceiverBehaviorFile1;
-        SignalerBehaviorFile1.open( dir + "behavior_Signaler_" + current_run + "_Env" + s_env + "_stage1.dat");
-        ReceiverBehaviorFile1.open( dir + "behavior_Receiver_" + current_run + "_Env" + s_env + "_Phase1.dat");
-        ofstream SignalerBehaviorFile2, ReceiverBehaviorFile2;
-        SignalerBehaviorFile2.open( dir + "behavior_Signaler_" + current_run + "_Env" + s_env + "_Phase2.dat");
-        ReceiverBehaviorFile2.open( dir + "behavior_Receiver_" + current_run + "_Env" + s_env + "_Phase2.dat");
-        ofstream SignalerBehaviorFile3, ReceiverBehaviorFile3;
-        SignalerBehaviorFile3.open( dir + "behavior_Signaler_" + current_run + "_Env" + s_env + "_Phase3.dat");
-        ReceiverBehaviorFile3.open( dir + "behavior_Receiver_" + current_run + "_Env" + s_env + "_Phase3.dat");
-
-        // stores the location of the landmarks and the food
-        ofstream LandmarkFile1, LandmarkFile2, LandmarkFile3;
-        LandmarkFile1.open(dir + "landmark_location_"+current_run+"_env"+s_env+"_phase1.dat");
-        LandmarkFile2.open(dir + "landmark_location_"+current_run+"_env"+s_env+"_phase2.dat");
-        LandmarkFile3.open(dir + "landmark_location_"+current_run+"_env"+s_env+"_phase3.dat");
-
-        // stores the location of the landmarks and the food
-        ofstream FitnessFunctionFile1, FitnessFunctionFile2, FitnessFunctionFile3;
-        FitnessFunctionFile1.open(dir + "fitness_function_"+current_run+"_env"+s_env+"_phase1.dat");
-        FitnessFunctionFile2.open(dir + "fitness_function_"+current_run+"_env"+s_env+"_phase2.dat");
-        FitnessFunctionFile3.open(dir + "fitness_function_"+current_run+"_env"+s_env+"_phase3.dat");
-
-        // test each for 3 positions 
+        // test each for 3 positions of the landmarks
         for (int i=0; i<3; i++){
+            // env setup
             genLandmarks_LeapFrog(rs, landmarkPositions);
-        
-            // establish food location
+             // establish food location
             food_location = landmarkPositions[env];
+            // write the landmarks to the output
+            for (int i = 1; i <= LN; i += 1){
+                LandmarkFile << landmarkPositions[i] << " ";
+            }
+            LandmarkFile << food_location << " ";
+        
+            // Stage 1: 
+            AgentReceiver.SetPosition(0);
+            AgentReceiver.SetOther(env);
+            SignalerBehaviorFile1 << AgentSignaler.GetPosition() << " ";
+            ReceiverBehaviorFile1 << AgentReceiver.GetPosition() << " ";
+
+            // Let the Receiver and Signaller Explore the enviornment (for 300) -> not scored
+            for (double time=0; time < RunDuration; time += StepSize){
+                AgentReceiver.SenseFood(food_location);
+                AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+                AgentReceiver.Step(StepSize);
+                SignalerBehaviorFile1 << AgentSignaler.GetPosition() << " ";
+                ReceiverBehaviorFile1 << AgentReceiver.GetPosition() << " ";
+            }
+            AgentReceiver.SetPosition(0);
+
+            // now we are scoring but in EASY mode
+            for (double time=0; time < RunDuration; time += StepSize){
+                AgentReceiver.SenseFood(food_location);
+                AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+                AgentReceiver.Step(StepSize);
+                SignalerBehaviorFile1 << AgentSignaler.GetPosition() << " ";
+                ReceiverBehaviorFile1 << AgentReceiver.GetPosition() << " ";
+
+                // get the absolute distance to the food
+                distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
+                total_score_receiver += easy_score(distance_food_receiver);
+                totaltrials ++;
+            }
+            AgentReceiver.SetPosition(0);
+
+            // now we are scoring but in HARD mode
+            for (double time=0; time < RunDuration; time += StepSize){
+                AgentReceiver.SenseFood(food_location);
+                AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+                AgentReceiver.Step(StepSize);
+                SignalerBehaviorFile1 << AgentSignaler.GetPosition() << " ";
+                ReceiverBehaviorFile1 << AgentReceiver.GetPosition() << " ";
+
+                // get the absolute distance to the food
+                distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
+                total_score_receiver += hard_score(distance_food_receiver);
+                totaltrials ++;
+            }
+
+
+            // Stage 2
+            int distance_to_receiver = 0;
+
+            // put the signaller in a random location (in the signaller box)
+            int location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
+            AgentSignaler.SetPosition(location);
+            // put the agent in its home position
+            AgentReceiver.SetPosition(0);
+            SignalerBehaviorFile2 << AgentSignaler.GetPosition() << " ";
+            ReceiverBehaviorFile2 << AgentReceiver.GetPosition() << " ";
+
+            // Let the Signaller Explore the enviornment (for 300) -> not scored (find the food)
+            for (double time=0; time < RunDuration; time += StepSize){
+                AgentSignaler.SenseFood(food_location);
+                AgentSignaler.SenseLandmarks(LN, landmarkPositions);
+                AgentSignaler.Step(StepSize);
+                SignalerBehaviorFile2 << AgentSignaler.GetPosition() << " ";
+                ReceiverBehaviorFile2 << AgentReceiver.GetPosition() << " ";
+            }
+
+            AgentSignaler.SetPosition(location);
+            AgentReceiver.SetPosition(0);
+
+            // Let the Signaller Explore the other agent (for 300) -> not scored (find his friend)
+            for (double time=0; time < RunDuration; time += StepSize){
+                AgentSignaler.SenseFood(food_location);
+                AgentSignaler.SenseLandmarks(LN, landmarkPositions);
+                AgentSignaler.SenseOther(AgentReceiver.pos);
+                AgentSignaler.Step(StepSize);
+                SignalerBehaviorFile2 << AgentSignaler.GetPosition() << " ";
+                ReceiverBehaviorFile2 << AgentReceiver.GetPosition() << " ";
+            }
+
+            AgentSignaler.SetPosition(location);
+            AgentReceiver.SetPosition(0);
+
+            // now it needs to go to the right distance from the reciever
+            // now we are scoring but in EASY mode
+            for (double time=0; time < RunDuration; time += StepSize){
+                AgentSignaler.SenseFood(food_location);
+                AgentSignaler.SenseLandmarks(LN, landmarkPositions);
+                AgentSignaler.SenseOther(AgentReceiver.pos);
+                AgentSignaler.Step(StepSize);
+                SignalerBehaviorFile2 << AgentSignaler.GetPosition() << " ";
+                ReceiverBehaviorFile2 << AgentReceiver.GetPosition() << " ";
+
+                // get the absolute distance to the food
+                distance_to_receiver = fabs(AgentSignaler.GetPosition() - AgentReceiver.GetPosition());
+                total_score_receiver += easy_score(distance_to_receiver);
+                totaltrials ++;
+            }
+            AgentSignaler.SetPosition(location);
+            AgentReceiver.SetPosition(0);
+
+            // now we are scoring but in HARD mode
+            for (double time=0; time < RunDuration; time += StepSize){
+                AgentSignaler.SenseFood(food_location);
+                AgentSignaler.SenseLandmarks(LN, landmarkPositions);
+                AgentSignaler.SenseOther(AgentReceiver.pos);
+                AgentSignaler.Step(StepSize);
+
+                SignalerBehaviorFile2 << AgentSignaler.GetPosition() << " ";
+                ReceiverBehaviorFile2 << AgentReceiver.GetPosition() << " ";
+
+                // get the absolute distance to the food
+                distance_to_receiver = fabs(AgentSignaler.GetPosition() - AgentReceiver.GetPosition());
+
+                total_score_receiver += hard_score(distance_to_receiver);
+                totaltrials ++;
+            }
+
+            // stage 3
 
             // **** Initialise the agents for this trial ****
             // put the signaller in a random location
@@ -551,15 +661,8 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
             AgentReceiver.SetPosition(0);
 
             // **** record the initial setup in the file
-
-            SignalerBehaviorFile1 << AgentSignaler.GetPosition() << " ";
-            ReceiverBehaviorFile1 << AgentReceiver.GetPosition() << " ";
-
-            // write the landmarks to the output
-            for (int i = 1; i <= LN; i += 1){
-                LandmarkFile1 << landmarkPositions[i] << " ";
-            }
-            LandmarkFile1 << food_location << " ";
+            SignalerBehaviorFile3 << AgentSignaler.GetPosition() << " ";
+            ReceiverBehaviorFile3 << AgentReceiver.GetPosition() << " ";
 
             // Let the Signaller and Receiver Explore the enviornment (for 300) -> not scored (find the food)
             for (double time=0; time < RunDuration; time += StepSize){
@@ -570,20 +673,14 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
                 AgentSignaler.Step(StepSize);
                 AgentReceiver.Step(StepSize);
 
-                SignalerBehaviorFile1 << AgentSignaler.GetPosition() << " ";
-                ReceiverBehaviorFile1 << 0.0 << " ";
-                FitnessFunctionFile1 << 0.0 << " ";
+                SignalerBehaviorFile3 << AgentSignaler.GetPosition() << " ";
+                ReceiverBehaviorFile3 << AgentSignaler.GetPosition()  << " ";
             }
             AgentSignaler.SetPosition(location);
             AgentReceiver.SetPosition(0);
 
-            SignalerBehaviorFile2 << AgentSignaler.GetPosition() << " ";
-            ReceiverBehaviorFile2 << AgentReceiver.GetPosition() << " ";
-            // write the landmarks to the output
-            for (int i = 1; i <= LN; i += 1){
-                LandmarkFile2 << landmarkPositions[i] << " ";
-            }
-            LandmarkFile2 << food_location << " ";
+            SignalerBehaviorFile3 << AgentSignaler.GetPosition() << " ";
+            ReceiverBehaviorFile3 << AgentReceiver.GetPosition() << " ";
 
             // now it needs to go to the right distance from the reciever
             // now we are scoring but in EASY mode
@@ -598,15 +695,13 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
                 AgentSignaler.Step(StepSize);
                 AgentReceiver.Step(StepSize);
 
-                SignalerBehaviorFile2 << AgentSignaler.GetPosition() << " ";
-                ReceiverBehaviorFile2 << AgentReceiver.GetPosition() << " ";
+                SignalerBehaviorFile3 << AgentSignaler.GetPosition() << " ";
+                ReceiverBehaviorFile3 << AgentReceiver.GetPosition() << " ";
 
                 // get the absolute distance to the food
                 distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
                 total_score_receiver += easy_score(distance_food_receiver);
                 totaltrials ++;
-
-                FitnessFunctionFile2 << easy_score(distance_food_receiver) << " ";
             }
 
             AgentSignaler.SetPosition(location);
@@ -630,7 +725,6 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
                 // get the absolute distance to the food
                 distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
                 total_score_receiver += hard_score(distance_food_receiver);
-                FitnessFunctionFile3 << hard_score(distance_food_receiver) << " ";
                 totaltrials ++;
             }
 
@@ -642,32 +736,19 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
             SignalerBehaviorFile3 << endl;
             ReceiverBehaviorFile3 << endl;
 
-            LandmarkFile1 << endl;
-            LandmarkFile2 << endl;
-            LandmarkFile3 << endl;
-
-            FitnessFunctionFile1 << endl;
-            FitnessFunctionFile2 << endl;
-            FitnessFunctionFile3 << endl;
+            LandmarkFile << endl;
         }
-
-        // close the files for that env
-        SignalerBehaviorFile1.close();
-        ReceiverBehaviorFile1.close();
-        SignalerBehaviorFile2.close();
-        ReceiverBehaviorFile2.close();
-        SignalerBehaviorFile3.close();
-        ReceiverBehaviorFile3.close();
-        LandmarkFile1.close();
-        LandmarkFile2.close();
-        LandmarkFile3.close();
-
-        FitnessFunctionFile1.close();
-        FitnessFunctionFile2.close();
-        FitnessFunctionFile3.close();
     }
+    // close the files for that env
+    SignalerBehaviorFile1.close();
+    ReceiverBehaviorFile1.close();
+    SignalerBehaviorFile2.close();
+    ReceiverBehaviorFile2.close();
+    SignalerBehaviorFile3.close();
+    ReceiverBehaviorFile3.close();
+    LandmarkFile.close();
 
-    return total_score_receiver / totaltrials;
+    return 1;
 }
 
 // ================================================
