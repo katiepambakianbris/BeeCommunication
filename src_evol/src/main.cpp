@@ -459,7 +459,7 @@ double stage3(TVector<double> &genotype, RandomState &rs){
 
             // get the absolute distance to the food
             distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
-            total_score_receiver = hard_score(distance_food_receiver);
+            total_score_receiver += hard_score(distance_food_receiver);
             totaltrials ++;
         }
     }
@@ -629,7 +629,7 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
 
                 // get the absolute distance to the food
                 distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
-                total_score_receiver = hard_score(distance_food_receiver);
+                total_score_receiver += hard_score(distance_food_receiver);
                 FitnessFunctionFile3 << hard_score(distance_food_receiver) << " ";
                 totaltrials ++;
             }
