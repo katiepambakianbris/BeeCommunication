@@ -217,6 +217,9 @@ double stage1(TVector<double> &genotype, RandomState &rs){
     TVector<double> landmarkPositions;
     genLandmarks_LeapFrog(rs, landmarkPositions);
 
+    // calculating what the set other should be
+    int distribution = 1/(N-1);
+
     // set each of the landmarks to be the location of the food
     for (int env =1; env<=LN;env++){
 
@@ -225,7 +228,7 @@ double stage1(TVector<double> &genotype, RandomState &rs){
 
         // Initialise the agent for this trial
         AgentReceiver.SetPosition(0);
-        AgentReceiver.SetOther(env);
+        AgentReceiver.SetOther(distribution * env);
 
         // Let the Receiver and Signaller Explore the enviornment (for 300) -> not scored
         for (double time=0; time < RunDuration; time += StepSize){
@@ -275,7 +278,7 @@ double stage2(TVector<double> &genotype, RandomState &rs){
     double totaltrials = 0;
     double totaltime;
     double total_score_receiver = 0;
-    double distance_to_receiver;
+    double distance_to_ideal_location;
 
     // **** Initalize the receiver and signaller ****
 
@@ -296,6 +299,9 @@ double stage2(TVector<double> &genotype, RandomState &rs){
     // **** Generate landmarks (using leapfrog method) ****
     TVector<double> landmarkPositions;
     genLandmarks_LeapFrog(rs, landmarkPositions);
+
+    // calculating what the set other should be
+    int distribution = 1/(N-1);
 
     // set each of the landmarks to be the location of the food
     for (int env =1; env<=LN;env++){
@@ -355,10 +361,13 @@ double stage2(TVector<double> &genotype, RandomState &rs){
             AgentSignaler.SenseOther(AgentReceiver.pos);
             AgentSignaler.Step(StepSize);
 
-            // get the absolute distance to the food
-            distance_to_receiver = fabs(AgentSignaler.GetPosition() - AgentReceiver.GetPosition());
+            int idealLocation = AgentReceiver.GetPosition() -(distribution * env);
 
-            total_score_receiver += hard_score(distance_to_receiver);
+            // get the absolute distance between the signaller and its ideal position
+            distance_to_ideal_location = fabs(AgentSignaler.GetPosition() - idealLocation);
+
+            // calculate the distance between where the reciever should be and where they actually are
+            total_score_receiver += hard_score(distance_to_ideal_location);
             totaltrials ++;
         }
     }
