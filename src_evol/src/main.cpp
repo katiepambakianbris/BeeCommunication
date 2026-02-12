@@ -159,13 +159,16 @@ double easy_score(double distance){
     return 0;
 }
 
+double normal_distribution(double sigma, double x){
+    return std::exp(-(x * x) / (2 * sigma * sigma));
+}
+
 // HARD MODE 
 double hard_score(double distance){
     // calculate the scoring zone
     double landmark_zone_length = LANDMARKZONEEND - LANDMARKZONESTART;
     double score_zone_length = landmark_zone_length / N;
     double one_side = score_zone_length / 2;
-    
     double one_segment = one_side / 4;
 
     if (distance <= one_segment){
@@ -181,6 +184,20 @@ double hard_score(double distance){
         return 0.25;
     }
     return 0;
+}
+
+double score(double position, double distance){
+    // check to see if the agent is out of bounds (return 0)
+
+    if (position > 15 || position < -5){
+        return 0;
+    } else{
+        double landmark_zone_length = LANDMARKZONEEND - LANDMARKZONESTART;
+        double score_zone_length = landmark_zone_length / N;
+        
+        double sigma = score_zone_length / 2;
+        return normal_distribution(sigma, distance);
+    }
 }
 
 // ---------------------------------------------------------
@@ -230,36 +247,25 @@ double stage1(TVector<double> &genotype, RandomState &rs){
         AgentReceiver.SetPosition(0);
         AgentReceiver.SetOther(distribution * env);
 
-        // Let the Receiver and Signaller Explore the enviornment (for 300) -> not scored
-        for (double time=0; time < RunDuration; time += StepSize){
+        // Let the Receiver and Signaller Explore the enviornment (for 150) -> not scored
+        for (double time=0; time < TransDuration; time += StepSize){
             AgentReceiver.SenseFood(food_location);
             AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+            AgentReceiver.SetOther(distribution * env);
             AgentReceiver.Step(StepSize);
         }
         AgentReceiver.SetPosition(0);
-
-        // now we are scoring but in EASY mode
-        // for (double time=0; time < RunDuration; time += StepSize){
-        //     AgentReceiver.SenseFood(food_location);
-        //     AgentReceiver.SenseLandmarks(LN, landmarkPositions);
-        //     AgentReceiver.Step(StepSize);
-
-        //     // get the absolute distance to the food
-        //     distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
-        //     total_score_receiver += easy_score(distance_food_receiver);
-        //     totaltrials ++;
-        // }
-        // AgentReceiver.SetPosition(0);
 
         // now we are scoring but in HARD mode
         for (double time=0; time < RunDuration; time += StepSize){
             AgentReceiver.SenseFood(food_location);
             AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+            AgentReceiver.SetOther(distribution * env);
             AgentReceiver.Step(StepSize);
 
             // get the absolute distance to the food
             distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
-            total_score_receiver += hard_score(distance_food_receiver);
+            total_score_receiver += score(AgentReceiver.GetPosition(), distance_food_receiver);
             totaltrials ++;
         }
     }
@@ -317,7 +323,7 @@ double stage2(TVector<double> &genotype, RandomState &rs){
         // put the agent in its home position
         AgentReceiver.SetPosition(0);
 
-        // Let the Signaller Explore the enviornment (for 300) -> not scored (find the food)
+        // Let the Signaller Explore the enviornment (for 150) -> not scored (find the food)
         for (double time=0; time < RunDuration; time += StepSize){
             AgentSignaler.SenseFood(food_location);
             AgentSignaler.SenseLandmarks(LN, landmarkPositions);
@@ -327,32 +333,6 @@ double stage2(TVector<double> &genotype, RandomState &rs){
         AgentSignaler.SetPosition(location);
         AgentReceiver.SetPosition(0);
 
-        // Let the Signaller Explore the other agent (for 300) -> not scored (find his friend)
-        for (double time=0; time < RunDuration; time += StepSize){
-            AgentSignaler.SenseFood(food_location);
-            AgentSignaler.SenseLandmarks(LN, landmarkPositions);
-            AgentSignaler.SenseOther(AgentReceiver.pos);
-            AgentSignaler.Step(StepSize);
-        }
-
-        AgentSignaler.SetPosition(location);
-        AgentReceiver.SetPosition(0);
-
-        // now it needs to go to the right distance from the reciever
-        // now we are scoring but in EASY mode
-        // for (double time=0; time < RunDuration; time += StepSize){
-        //     AgentSignaler.SenseFood(food_location);
-        //     AgentSignaler.SenseLandmarks(LN, landmarkPositions);
-        //     AgentSignaler.SenseOther(AgentReceiver.pos);
-        //     AgentSignaler.Step(StepSize);
-
-        //     // get the absolute distance to the food
-        //     distance_to_receiver = fabs(AgentSignaler.GetPosition() - AgentReceiver.GetPosition());
-        //     total_score_receiver += easy_score(distance_to_receiver);
-        //     totaltrials ++;
-        // }
-        // AgentSignaler.SetPosition(location);
-        // AgentReceiver.SetPosition(0);
 
         // now we are scoring but in HARD mode
         for (double time=0; time < RunDuration; time += StepSize){
@@ -367,7 +347,7 @@ double stage2(TVector<double> &genotype, RandomState &rs){
             distance_to_ideal_location = fabs(AgentSignaler.GetPosition() - idealLocation);
 
             // calculate the distance between where the reciever should be and where they actually are
-            total_score_receiver += hard_score(distance_to_ideal_location);
+            total_score_receiver += score(AgentSignaler.GetPosition(), distance_to_ideal_location);
             totaltrials ++;
         }
     }
@@ -421,7 +401,7 @@ double stage3(TVector<double> &genotype, RandomState &rs){
         AgentReceiver.SetPosition(0);
 
         // Let the Signaller and Receiver Explore the enviornment (for 300) -> not scored (find the food)
-        for (double time=0; time < RunDuration; time += StepSize){
+        for (double time=0; time < TransDuration; time += StepSize){
             AgentSignaler.SenseFood(food_location);
             AgentSignaler.SenseLandmarks(LN, landmarkPositions);
             AgentReceiver.SenseFood(food_location);
@@ -431,28 +411,6 @@ double stage3(TVector<double> &genotype, RandomState &rs){
         }
         AgentSignaler.SetPosition(location);
         AgentReceiver.SetPosition(0);
-
-        // now it needs to go to the right distance from the reciever
-        // now we are scoring but in EASY mode
-        // for (double time=0; time < RunDuration; time += StepSize){
-        //     AgentSignaler.SenseFood(food_location);
-        //     AgentSignaler.SenseLandmarks(LN, landmarkPositions);
-        //     AgentSignaler.SenseOther(AgentReceiver.pos);
-        //     AgentReceiver.SenseOther(AgentSignaler.pos);
-        //     AgentReceiver.SenseFood(food_location);
-        //     AgentReceiver.SenseLandmarks(LN, landmarkPositions);
-
-        //     AgentSignaler.Step(StepSize);
-        //     AgentReceiver.Step(StepSize);
-
-        //     // get the absolute distance to the food
-        //     distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
-        //     total_score_receiver += easy_score(distance_food_receiver);
-        //     totaltrials ++;
-        // }
-
-        // AgentSignaler.SetPosition(location);
-        // AgentReceiver.SetPosition(0);
 
         // now we are scoring but in HARD mode
         for (double time=0; time < RunDuration; time += StepSize){
@@ -468,7 +426,7 @@ double stage3(TVector<double> &genotype, RandomState &rs){
 
             // get the absolute distance to the food
             distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
-            total_score_receiver += hard_score(distance_food_receiver);
+            total_score_receiver += score(AgentReceiver.GetPosition(), distance_food_receiver);
             totaltrials ++;
         }
     }
@@ -550,7 +508,7 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
             ReceiverBehaviorFile1 << AgentReceiver.GetPosition() << " ";
 
             // Let the Receiver and Signaller Explore the enviornment (for 300) -> not scored
-            for (double time=0; time < RunDuration; time += StepSize){
+            for (double time=0; time < TransDuration; time += StepSize){
                 AgentReceiver.SenseFood(food_location);
                 AgentReceiver.SenseLandmarks(LN, landmarkPositions);
                 AgentReceiver.Step(StepSize);
@@ -558,21 +516,6 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
                 ReceiverBehaviorFile1 << AgentReceiver.GetPosition() << " ";
             }
             AgentReceiver.SetPosition(0);
-
-            // now we are scoring but in EASY mode
-            // for (double time=0; time < RunDuration; time += StepSize){
-            //     AgentReceiver.SenseFood(food_location);
-            //     AgentReceiver.SenseLandmarks(LN, landmarkPositions);
-            //     AgentReceiver.Step(StepSize);
-            //     SignalerBehaviorFile1 << AgentSignaler.GetPosition() << " ";
-            //     ReceiverBehaviorFile1 << AgentReceiver.GetPosition() << " ";
-
-            //     // get the absolute distance to the food
-            //     distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
-            //     total_score_receiver += easy_score(distance_food_receiver);
-            //     totaltrials ++;
-            // }
-            // AgentReceiver.SetPosition(0);
 
             // now we are scoring but in HARD mode
             for (double time=0; time < RunDuration; time += StepSize){
@@ -584,13 +527,14 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
 
                 // get the absolute distance to the food
                 distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
-                total_score_receiver += hard_score(distance_food_receiver);
+                total_score_receiver += score(AgentReceiver.GetPosition(), distance_food_receiver);
                 totaltrials ++;
             }
 
 
             // Stage 2
-            int distance_to_receiver = 0;
+            // calculating what the set other should be
+            int distribution = 1/(N-1);
 
             // put the signaller in a random location (in the signaller box)
             int location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
@@ -599,18 +543,6 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
             AgentReceiver.SetPosition(0);
             SignalerBehaviorFile2 << AgentSignaler.GetPosition() << " ";
             ReceiverBehaviorFile2 << AgentReceiver.GetPosition() << " ";
-
-            // Let the Signaller Explore the enviornment (for 300) -> not scored (find the food)
-            for (double time=0; time < RunDuration; time += StepSize){
-                AgentSignaler.SenseFood(food_location);
-                AgentSignaler.SenseLandmarks(LN, landmarkPositions);
-                AgentSignaler.Step(StepSize);
-                SignalerBehaviorFile2 << AgentSignaler.GetPosition() << " ";
-                ReceiverBehaviorFile2 << AgentReceiver.GetPosition() << " ";
-            }
-
-            AgentSignaler.SetPosition(location);
-            AgentReceiver.SetPosition(0);
 
             // Let the Signaller Explore the other agent (for 300) -> not scored (find his friend)
             for (double time=0; time < RunDuration; time += StepSize){
@@ -625,24 +557,6 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
             AgentSignaler.SetPosition(location);
             AgentReceiver.SetPosition(0);
 
-            // now it needs to go to the right distance from the reciever
-            // now we are scoring but in EASY mode
-            // for (double time=0; time < RunDuration; time += StepSize){
-            //     AgentSignaler.SenseFood(food_location);
-            //     AgentSignaler.SenseLandmarks(LN, landmarkPositions);
-            //     AgentSignaler.SenseOther(AgentReceiver.pos);
-            //     AgentSignaler.Step(StepSize);
-            //     SignalerBehaviorFile2 << AgentSignaler.GetPosition() << " ";
-            //     ReceiverBehaviorFile2 << AgentReceiver.GetPosition() << " ";
-
-            //     // get the absolute distance to the food
-            //     distance_to_receiver = fabs(AgentSignaler.GetPosition() - AgentReceiver.GetPosition());
-            //     total_score_receiver += easy_score(distance_to_receiver);
-            //     totaltrials ++;
-            // }
-            // AgentSignaler.SetPosition(location);
-            // AgentReceiver.SetPosition(0);
-
             // now we are scoring but in HARD mode
             for (double time=0; time < RunDuration; time += StepSize){
                 AgentSignaler.SenseFood(food_location);
@@ -653,10 +567,13 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
                 SignalerBehaviorFile2 << AgentSignaler.GetPosition() << " ";
                 ReceiverBehaviorFile2 << AgentReceiver.GetPosition() << " ";
 
-                // get the absolute distance to the food
-                distance_to_receiver = fabs(AgentSignaler.GetPosition() - AgentReceiver.GetPosition());
+                int idealLocation = AgentReceiver.GetPosition() -(distribution * env);
 
-                total_score_receiver += hard_score(distance_to_receiver);
+                // get the absolute distance between the signaller and its ideal position
+                int distance_to_ideal_location = fabs(AgentSignaler.GetPosition() - idealLocation);
+
+                // calculate the distance between where the reciever should be and where they actually are
+                total_score_receiver += score(AgentSignaler.GetPosition(), distance_to_ideal_location);
                 totaltrials ++;
             }
 
@@ -673,7 +590,7 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
             ReceiverBehaviorFile3 << AgentReceiver.GetPosition() << " ";
 
             // Let the Signaller and Receiver Explore the enviornment (for 300) -> not scored (find the food)
-            for (double time=0; time < RunDuration; time += StepSize){
+            for (double time=0; time < TransDuration; time += StepSize){
                 AgentSignaler.SenseFood(food_location);
                 AgentSignaler.SenseLandmarks(LN, landmarkPositions);
                 AgentReceiver.SenseFood(food_location);
@@ -690,30 +607,6 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
             SignalerBehaviorFile3 << AgentSignaler.GetPosition() << " ";
             ReceiverBehaviorFile3 << AgentReceiver.GetPosition() << " ";
 
-            // now it needs to go to the right distance from the reciever
-            // now we are scoring but in EASY mode
-            // for (double time=0; time < RunDuration; time += StepSize){
-            //     AgentSignaler.SenseFood(food_location);
-            //     AgentSignaler.SenseLandmarks(LN, landmarkPositions);
-            //     AgentSignaler.SenseOther(AgentReceiver.pos);
-            //     AgentReceiver.SenseOther(AgentSignaler.pos);
-            //     AgentReceiver.SenseFood(food_location);
-            //     AgentReceiver.SenseLandmarks(LN, landmarkPositions);
-
-            //     AgentSignaler.Step(StepSize);
-            //     AgentReceiver.Step(StepSize);
-
-            //     SignalerBehaviorFile3 << AgentSignaler.GetPosition() << " ";
-            //     ReceiverBehaviorFile3 << AgentReceiver.GetPosition() << " ";
-
-            //     // get the absolute distance to the food
-            //     distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
-            //     total_score_receiver += easy_score(distance_food_receiver);
-            //     totaltrials ++;
-            // }
-
-            // AgentSignaler.SetPosition(location);
-            // AgentReceiver.SetPosition(0);
 
             // now we are scoring but in HARD mode
             for (double time=0; time < RunDuration; time += StepSize){
@@ -732,7 +625,7 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
 
                 // get the absolute distance to the food
                 distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
-                total_score_receiver += hard_score(distance_food_receiver);
+                total_score_receiver += score(AgentReceiver.GetPosition(), distance_food_receiver);
                 totaltrials ++;
             }
 
@@ -988,8 +881,6 @@ int main (int argc, const char* argv[])
 
 
     if (search.BestPerformance() > 0.99) {
-        RecordBehavior(search, search.getRandomState());
-    } else if (search.BestPerformance() < 0.1){
         RecordBehavior(search, search.getRandomState());
     }
 
