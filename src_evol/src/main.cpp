@@ -882,8 +882,6 @@ int main (int argc, const char* argv[])
 
     if (search.BestPerformance() > 0.99) {
         RecordBehavior(search, search.getRandomState());
-    } else if (search.BestPerformance() < 0.1){
-        RecordBehavior(search, search.getRandomState());
     }
 
     #ifdef PRINTTOFILE
