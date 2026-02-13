@@ -476,9 +476,9 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
     ReceiverBehaviorFile3.open( dir + "behavior_Receiver_stage3_" + current_run+".dat");
 
     ofstream Stage1Fitness, Stage2Fitness, Stage3Fitness;
-    Stage1Fitness.open( dir + "fitness_Signaler_stage1_" + current_run +".dat");
-    Stage2Fitness.open( dir + "fitness_Receiver_stage1_" + current_run+".dat");
-    Stage3Fitness.open( dir + "fitness_Receiver_stage1_" + current_run+".dat");
+    Stage1Fitness.open( dir + "fitness_stage1_" + current_run +".dat");
+    Stage2Fitness.open( dir + "fitness_stage2_" + current_run+".dat");
+    Stage3Fitness.open( dir + "fitness_stage3_" + current_run+".dat");
     
     // stores the location of the landmarks and the food -> this is each line 
     ofstream LandmarkFile;
