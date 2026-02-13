@@ -524,9 +524,9 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
 
                 // get the absolute distance to the food
                 distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
-                total_score_receiver += score(AgentReceiver.GetPosition(), distance_food_receiver);
-
-                Stage1Fitness << total_score_receiver << " ";
+                double result = score(AgentReceiver.GetPosition(), distance_food_receiver);
+                total_score_receiver += result;
+                Stage1Fitness << result << " ";
 
                 totaltrials ++;
             }
@@ -573,8 +573,9 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
                 int distance_to_ideal_location = fabs(AgentSignaler.GetPosition() - idealLocation);
 
                 // calculate the distance between where the reciever should be and where they actually are
-                total_score_receiver += score(AgentSignaler.GetPosition(), distance_to_ideal_location);
-                Stage2Fitness << total_score_receiver << " ";
+                int result = score(AgentSignaler.GetPosition(), distance_to_ideal_location);
+                total_score_receiver+=result;
+                Stage2Fitness << result << " ";
                 totaltrials ++;
             }
 
@@ -626,8 +627,9 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
 
                 // get the absolute distance to the food
                 distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
-                total_score_receiver += score(AgentReceiver.GetPosition(), distance_food_receiver);
-                Stage3Fitness << total_score_receiver << " ";
+                double result = score(AgentReceiver.GetPosition(), distance_food_receiver);
+                total_score_receiver += result;
+                Stage3Fitness << result << " ";
                 totaltrials ++;
             }
 
