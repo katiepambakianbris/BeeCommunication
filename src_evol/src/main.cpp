@@ -253,7 +253,6 @@ double stage1(TVector<double> &genotype, RandomState &rs){
             AgentReceiver.SetOther(distribution * env);
             AgentReceiver.Step(StepSize);
         }
-        AgentReceiver.SetPosition(0);
 
         // now we are scoring but in HARD mode
         for (double time=0; time < RunDuration * 0.25; time += StepSize){
@@ -328,10 +327,6 @@ double stage2(TVector<double> &genotype, RandomState &rs){
             AgentSignaler.SenseLandmarks(LN, landmarkPositions);
             AgentSignaler.Step(StepSize);
         }
-
-        AgentSignaler.SetPosition(location);
-        AgentReceiver.SetPosition(0);
-
 
         // now we are scoring but in HARD mode
         for (double time=0; time < RunDuration*0.25; time += StepSize){
@@ -408,8 +403,6 @@ double stage3(TVector<double> &genotype, RandomState &rs){
             AgentSignaler.Step(StepSize);
             AgentReceiver.Step(StepSize);
         }
-        AgentSignaler.SetPosition(location);
-        AgentReceiver.SetPosition(0);
 
         // now we are scoring but in HARD mode
         for (double time=0; time < RunDuration *0.25; time += StepSize){
