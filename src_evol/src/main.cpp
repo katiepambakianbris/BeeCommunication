@@ -195,7 +195,7 @@ double score(double position, double distance){
         double landmark_zone_length = LANDMARKZONEEND - LANDMARKZONESTART;
         double score_zone_length = landmark_zone_length / N;
         
-        double sigma = score_zone_length / 2;
+        double sigma = score_zone_length;
         return normal_distribution(sigma, distance);
     }
 }
@@ -210,7 +210,6 @@ double score(double position, double distance){
 // ---------------------------------------------------------
 
 double stage1(TVector<double> &genotype, RandomState &rs){
-
     // trial variables 
     double food_location;
     double totaltrials = 0;
@@ -235,7 +234,7 @@ double stage1(TVector<double> &genotype, RandomState &rs){
     genLandmarks_LeapFrog(rs, landmarkPositions);
 
     // calculating what the set other should be
-    int distribution = 1/(N-1);
+    int distribution = 1.0/(N-1);
 
     // set each of the landmarks to be the location of the food
     for (int env =1; env<=LN;env++){
@@ -248,7 +247,7 @@ double stage1(TVector<double> &genotype, RandomState &rs){
         AgentReceiver.SetOther(distribution * env);
 
         // Let the Receiver and Signaller Explore the enviornment (for 150) -> not scored
-        for (double time=0; time < TransDuration; time += StepSize){
+        for (double time=0; time < RunDuration * 0.75; time += StepSize){
             AgentReceiver.SenseFood(food_location);
             AgentReceiver.SenseLandmarks(LN, landmarkPositions);
             AgentReceiver.SetOther(distribution * env);
@@ -257,7 +256,7 @@ double stage1(TVector<double> &genotype, RandomState &rs){
         AgentReceiver.SetPosition(0);
 
         // now we are scoring but in HARD mode
-        for (double time=0; time < RunDuration; time += StepSize){
+        for (double time=0; time < RunDuration * 0.25; time += StepSize){
             AgentReceiver.SenseFood(food_location);
             AgentReceiver.SenseLandmarks(LN, landmarkPositions);
             AgentReceiver.SetOther(distribution * env);
@@ -335,7 +334,7 @@ double stage2(TVector<double> &genotype, RandomState &rs){
 
 
         // now we are scoring but in HARD mode
-        for (double time=0; time < RunDuration; time += StepSize){
+        for (double time=0; time < RunDuration*0.25; time += StepSize){
             AgentSignaler.SenseFood(food_location);
             AgentSignaler.SenseLandmarks(LN, landmarkPositions);
             AgentSignaler.SenseOther(AgentReceiver.pos);
@@ -401,7 +400,7 @@ double stage3(TVector<double> &genotype, RandomState &rs){
         AgentReceiver.SetPosition(0);
 
         // Let the Signaller and Receiver Explore the enviornment (for 300) -> not scored (find the food)
-        for (double time=0; time < TransDuration; time += StepSize){
+        for (double time=0; time < RunDuration*0.75; time += StepSize){
             AgentSignaler.SenseFood(food_location);
             AgentSignaler.SenseLandmarks(LN, landmarkPositions);
             AgentReceiver.SenseFood(food_location);
@@ -413,7 +412,7 @@ double stage3(TVector<double> &genotype, RandomState &rs){
         AgentReceiver.SetPosition(0);
 
         // now we are scoring but in HARD mode
-        for (double time=0; time < RunDuration; time += StepSize){
+        for (double time=0; time < RunDuration *0.25; time += StepSize){
             AgentSignaler.SenseFood(food_location);
             AgentSignaler.SenseLandmarks(LN, landmarkPositions);
             AgentSignaler.SenseOther(AgentReceiver.pos);
@@ -476,16 +475,21 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
     // storing them all in the same file, each gets a new line (so 9 trials per file)
     // the stages are separated into three files
     ofstream SignalerBehaviorFile1, ReceiverBehaviorFile1, SignalerBehaviorFile2, ReceiverBehaviorFile2,SignalerBehaviorFile3, ReceiverBehaviorFile3;
-    SignalerBehaviorFile1.open( dir + "behavior_Signaler_stage1_" + current_run);
-    ReceiverBehaviorFile1.open( dir + "behavior_Receiver_stage1_" + current_run);
-    SignalerBehaviorFile2.open( dir + "behavior_Signaler_stage2_" + current_run);
-    ReceiverBehaviorFile2.open( dir + "behavior_Receiver_stage2_" + current_run);
-    SignalerBehaviorFile3.open( dir + "behavior_Signaler_stage3_" + current_run);
-    ReceiverBehaviorFile3.open( dir + "behavior_Receiver_stage3_" + current_run);
+    SignalerBehaviorFile1.open( dir + "behavior_Signaler_stage1_" + current_run +".dat");
+    ReceiverBehaviorFile1.open( dir + "behavior_Receiver_stage1_" + current_run+".dat");
+    SignalerBehaviorFile2.open( dir + "behavior_Signaler_stage2_" + current_run+".dat");
+    ReceiverBehaviorFile2.open( dir + "behavior_Receiver_stage2_" + current_run+".dat");
+    SignalerBehaviorFile3.open( dir + "behavior_Signaler_stage3_" + current_run+".dat");
+    ReceiverBehaviorFile3.open( dir + "behavior_Receiver_stage3_" + current_run+".dat");
+
+    ofstream Stage1Fitness, Stage2Fitness, Stage3Fitness;
+    Stage1Fitness.open( dir + "fitness_Signaler_stage1_" + current_run +".dat");
+    Stage2Fitness.open( dir + "fitness_Receiver_stage1_" + current_run+".dat");
+    Stage3Fitness.open( dir + "fitness_Receiver_stage1_" + current_run+".dat");
     
     // stores the location of the landmarks and the food -> this is each line 
     ofstream LandmarkFile;
-    LandmarkFile.open(dir + "landmark_location_stage1_"+current_run);
+    LandmarkFile.open(dir + "landmark_location_stage1_"+current_run+".dat");
 
     // set each of the landmarks to be the location of the food
     for (int env =1; env<=LN;env++){
@@ -508,7 +512,7 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
             ReceiverBehaviorFile1 << AgentReceiver.GetPosition() << " ";
 
             // Let the Receiver and Signaller Explore the enviornment (for 300) -> not scored
-            for (double time=0; time < TransDuration; time += StepSize){
+            for (double time=0; time < RunDuration*0.75; time += StepSize){
                 AgentReceiver.SenseFood(food_location);
                 AgentReceiver.SenseLandmarks(LN, landmarkPositions);
                 AgentReceiver.Step(StepSize);
@@ -518,7 +522,7 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
             AgentReceiver.SetPosition(0);
 
             // now we are scoring but in HARD mode
-            for (double time=0; time < RunDuration; time += StepSize){
+            for (double time=0; time < RunDuration *0.25; time += StepSize){
                 AgentReceiver.SenseFood(food_location);
                 AgentReceiver.SenseLandmarks(LN, landmarkPositions);
                 AgentReceiver.Step(StepSize);
@@ -528,6 +532,9 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
                 // get the absolute distance to the food
                 distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
                 total_score_receiver += score(AgentReceiver.GetPosition(), distance_food_receiver);
+
+                Stage1Fitness << total_score_receiver << " ";
+
                 totaltrials ++;
             }
 
@@ -558,7 +565,7 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
             AgentReceiver.SetPosition(0);
 
             // now we are scoring but in HARD mode
-            for (double time=0; time < RunDuration; time += StepSize){
+            for (double time=0; time < RunDuration*0.25; time += StepSize){
                 AgentSignaler.SenseFood(food_location);
                 AgentSignaler.SenseLandmarks(LN, landmarkPositions);
                 AgentSignaler.SenseOther(AgentReceiver.pos);
@@ -574,6 +581,7 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
 
                 // calculate the distance between where the reciever should be and where they actually are
                 total_score_receiver += score(AgentSignaler.GetPosition(), distance_to_ideal_location);
+                Stage2Fitness << total_score_receiver << " ";
                 totaltrials ++;
             }
 
@@ -590,7 +598,7 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
             ReceiverBehaviorFile3 << AgentReceiver.GetPosition() << " ";
 
             // Let the Signaller and Receiver Explore the enviornment (for 300) -> not scored (find the food)
-            for (double time=0; time < TransDuration; time += StepSize){
+            for (double time=0; time < RunDuration*0.75; time += StepSize){
                 AgentSignaler.SenseFood(food_location);
                 AgentSignaler.SenseLandmarks(LN, landmarkPositions);
                 AgentReceiver.SenseFood(food_location);
@@ -609,7 +617,7 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
 
 
             // now we are scoring but in HARD mode
-            for (double time=0; time < RunDuration; time += StepSize){
+            for (double time=0; time < RunDuration *0.25; time += StepSize){
                 AgentSignaler.SenseFood(food_location);
                 AgentSignaler.SenseLandmarks(LN, landmarkPositions);
                 AgentSignaler.SenseOther(AgentReceiver.pos);
@@ -626,6 +634,7 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
                 // get the absolute distance to the food
                 distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
                 total_score_receiver += score(AgentReceiver.GetPosition(), distance_food_receiver);
+                Stage3Fitness << total_score_receiver << " ";
                 totaltrials ++;
             }
 
@@ -636,6 +645,9 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
             ReceiverBehaviorFile2 << endl;
             SignalerBehaviorFile3 << endl;
             ReceiverBehaviorFile3 << endl;
+            Stage1Fitness << endl;
+            Stage2Fitness << endl;
+            Stage3Fitness << endl;
 
             LandmarkFile << endl;
         }
@@ -647,6 +659,9 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
     ReceiverBehaviorFile2.close();
     SignalerBehaviorFile3.close();
     ReceiverBehaviorFile3.close();
+    Stage1Fitness.close();
+    Stage2Fitness.close();
+    Stage3Fitness.close();
     LandmarkFile.close();
 
     return 1;
