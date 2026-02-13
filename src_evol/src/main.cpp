@@ -512,7 +512,6 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
                 SignalerBehaviorFile1 << AgentSignaler.GetPosition() << " ";
                 ReceiverBehaviorFile1 << AgentReceiver.GetPosition() << " ";
             }
-            AgentReceiver.SetPosition(0);
 
             // now we are scoring but in HARD mode
             for (double time=0; time < RunDuration *0.25; time += StepSize){
@@ -553,9 +552,6 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
                 SignalerBehaviorFile2 << AgentSignaler.GetPosition() << " ";
                 ReceiverBehaviorFile2 << AgentReceiver.GetPosition() << " ";
             }
-
-            AgentSignaler.SetPosition(location);
-            AgentReceiver.SetPosition(0);
 
             // now we are scoring but in HARD mode
             for (double time=0; time < RunDuration*0.25; time += StepSize){
@@ -603,11 +599,6 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
                 SignalerBehaviorFile3 << AgentSignaler.GetPosition() << " ";
                 ReceiverBehaviorFile3 << AgentSignaler.GetPosition()  << " ";
             }
-            AgentSignaler.SetPosition(location);
-            AgentReceiver.SetPosition(0);
-
-            SignalerBehaviorFile3 << AgentSignaler.GetPosition() << " ";
-            ReceiverBehaviorFile3 << AgentReceiver.GetPosition() << " ";
 
 
             // now we are scoring but in HARD mode
