@@ -278,8 +278,6 @@ double stage1(TVector<double> &genotype, RandomState &rs){
             total_trials +=1;
         }
     }
-
-
     return total_fitness / total_trials;
 }
 
@@ -477,6 +475,17 @@ double RecordBehaviorStage1(TSearch &s, RandomState &rs){
     GenPhenMapping(genotype, phenotypeReceiver, (int)(N*N + 5*N +1));
     CountingAgent AgentReceiver(N, phenotypeReceiver);
 
+    // save this state
+    // Save state
+    TVector<double> savedstateReceiver;
+    savedstateReceiver.SetBounds(1,N);
+
+    // Saved each of their neural states 
+    for (int i = 1; i <= N; i++)
+    {
+        savedstateReceiver[i] = AgentReceiver.NervousSystem.NeuronState(i);
+    }
+
     // **** Generate landmarks (using leapfrog method) ****
     TVector<double> landmarkPositions;
 
@@ -486,7 +495,13 @@ double RecordBehaviorStage1(TSearch &s, RandomState &rs){
 
     for (int i=0; i<3; i++){
         genLandmarks_LeapFrog(rs, landmarkPositions);
+        AgentReceiver.ResetSensors();
+        // Reset neural state
+        for (int i = 1; i <= N; i++)
+        {
+            AgentReceiver.NervousSystem.SetNeuronState(i, savedstateReceiver[i]);
         
+        }
         // set each of the landmarks to be the location of the food
         for (int env =1; env<=LN;env++){
             // set the food to be at the ith landmark location
