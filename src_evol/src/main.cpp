@@ -487,7 +487,7 @@ double RecordBehaviorStage1(TSearch &s, RandomState &rs){
     TVector<double> landmarkPositions;
 
     // calculating what the set other should be (value between 0.5 and 1.5)
-    int step = 1.0/(LN-1);
+    double step = 1.0/(LN-1);
     double start = 0.5;
 
     for (int i=0; i<3; i++){
@@ -512,8 +512,8 @@ double RecordBehaviorStage1(TSearch &s, RandomState &rs){
             AgentReceiver.SetPosition(0);
             AgentReceiver.SetOther(start+step*env);
 
-            int scoringTime = 0.0;
-            int totalScore = 0.0;
+            double scoringTime = 0.0;
+            double totalScore = 0.0;
 
             // record the initial position
             ReceiverBehaviorFile1 << AgentReceiver.GetPosition() << " ";
@@ -545,7 +545,7 @@ double RecordBehaviorStage1(TSearch &s, RandomState &rs){
 
             // END OF TRIAL
             // score at the end of this trial
-            int fitness = 1 - ((totalScore/scoringTime)/MinLength);
+            double fitness = 1 - ((totalScore/scoringTime)/MinLength);
             if (fitness < 0.0){
                 fitness = 0.0;
             }
