@@ -17,7 +17,7 @@ const double StepSize = 0.1;
 const double RunDuration = 300.0;
 const double TransDuration = 150.0;
 const double MinLength = 50.0;      
-const double mindist = 5.0;         
+const double mindist = 3.0;         
 
 // EA params
 const int POPSIZE = 96; //96;
@@ -46,7 +46,7 @@ const int SIGNALLEREND = -1;
 // Reciver start location
 const int RECEIVERSTART = 0;
 // landmark zone
-const int LANDMARKZONESTART = 5;
+const int LANDMARKZONESTART = 10;
 const int LANDMARKZONEEND = LN * 10 + LANDMARKZONESTART;
 
 // ------------------------------------
@@ -106,25 +106,22 @@ TVector<double> genLandmarks_LeapFrog(RandomState &rs, TVector<double> &landmark
     landmarkPositions.SetBounds(1, LN);
 
     // generate the position of the first landmark
-    int lenLandmarkZone = LANDMARKZONEEND - LANDMARKZONESTART;
-    int max = lenLandmarkZone / N;
+    double lenLandmarkZone = LANDMARKZONEEND - LANDMARKZONESTART;
+    double maxSpacing = lenLandmarkZone / (double)(LN+1);
+    // allow there to be a 20% variation in the landmarks position -> this could be increased
+    double variation = 0.0;
+    // generate the spaceing using this variation
+    double spacing = maxSpacing * (1.0 + rs.UniformRandom(-variation, variation));
 
-    int y = rs.UniformRandom(0,max);
-    int x0 = rs.UniformRandom(0,y) + LANDMARKZONESTART;
+    double total_width = (LN-1) * spacing;
 
-    landmarkPositions[1] = x0;
+    // initalise the start position
+    double max_start = LANDMARKZONEEND - total_width;
+    double start = rs.UniformRandom(LANDMARKZONESTART, max_start);
 
-    if (LN >1){
-        // generate the offset J
-        int j = rs.UniformRandom(0,max);
-
-        for (int i = 2;i <= LN; i ++){
-            landmarkPositions[i] = x0 + ((i-1)*j);
-        }
+    for (int i = 1;i <= LN; i ++){
+        landmarkPositions[i] = start + (i-1)*spacing;
     }
-
-    // check that the last landmark is not out of range
-    assert(landmarkPositions[LN] <= LANDMARKZONEEND);
    
     return landmarkPositions;
 }
@@ -230,7 +227,7 @@ double stage1(TVector<double> &genotype, RandomState &rs){
     TVector<double> landmarkPositions;
 
     // calculating what the set other should be (value between 0.5 and 1.5)
-    int step = 1.0/(LN-1);
+    double step = 1.0/(LN-1);
     double start = 0.5;
 
     for (int i=0; i<3; i++){
@@ -245,8 +242,8 @@ double stage1(TVector<double> &genotype, RandomState &rs){
             AgentReceiver.SetPosition(0);
             AgentReceiver.SetOther(start+step*env);
 
-            int scoringTime = 0.0;
-            int totalScore = 0.0;
+            double scoringTime = 0.0;
+            double totalScore = 0.0;
 
             // Let the Receiver and Signaller Explore the enviornment (for 150) -> not scored
             for (double time=0; time < RunDuration; time += StepSize){
@@ -270,7 +267,7 @@ double stage1(TVector<double> &genotype, RandomState &rs){
 
             // END OF TRIAL
             // score at the end of this trial
-            int fitness = 1 - ((totalScore/scoringTime)/MinLength);
+            double fitness = 1 - ((totalScore/scoringTime)/MinLength);
             if (fitness < 0.0){
                 fitness = 0.0;
             }
