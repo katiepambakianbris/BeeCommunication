@@ -443,16 +443,17 @@ double RecordBehaviorStage1(TSearch &s, RandomState &rs){
     // **** create the files to save the behaviour/env ***
     // storing them all in the same file, each gets a new line (so 9 trials per file)
     // the stages are separated into three files
-    ofstream SignalerBehaviorFile1, ReceiverBehaviorFile1, SignalerBehaviorFile2, ReceiverBehaviorFile2,SignalerBehaviorFile3, ReceiverBehaviorFile3;
-    SignalerBehaviorFile1.open( dir + "behavior_Signaler_stage1_" + current_run +".dat");
-    ReceiverBehaviorFile1.open( dir + "behavior_Receiver_stage1_" + current_run+".dat");
+    ofstream ReceiverBehaviorFile1;
+    // SignalerBehaviorFile1.open( dir + "behavior_Signaler_stage1_" + current_run + ".dat");
+    ReceiverBehaviorFile1.open( dir + "behavior_Receiver_stage1_" + current_run + ".dat");
 
-    ofstream Stage1Fitness, Stage2Fitness, Stage3Fitness;
+    ofstream Stage1Fitness;
     Stage1Fitness.open( dir + "fitness_stage1_" + current_run +".dat");
     
     // stores the location of the landmarks and the food -> this is each line 
     ofstream LandmarkFile;
-    LandmarkFile.open(dir + "landmark_location_stage1"+current_run+".dat");
+    LandmarkFile.open(dir + "landmark_location_stage1_"+current_run+".dat");
+
     // trial variables 
     double food_location;
     double total_trials = 0;
@@ -524,7 +525,7 @@ double RecordBehaviorStage1(TSearch &s, RandomState &rs){
                 AgentReceiver.SetOther(start+step*env);
                 AgentReceiver.Step(StepSize);
 
-                if (time > TransDuration){
+                if (time >= TransDuration){
                     distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
 
                     // if the distance is within a threshold set the score to be perfect
@@ -537,8 +538,9 @@ double RecordBehaviorStage1(TSearch &s, RandomState &rs){
                 }
                 
                 ReceiverBehaviorFile1 << AgentReceiver.GetPosition() << " ";
-                Stage1Fitness << 1 - ((totalScore/scoringTime)/MinLength) << " ";
-
+                if (scoringTime > 0){
+                    Stage1Fitness << 1 - ((totalScore/scoringTime)/MinLength) << " ";
+                }
             }
 
             // END OF TRIAL
@@ -549,8 +551,17 @@ double RecordBehaviorStage1(TSearch &s, RandomState &rs){
             }
             total_fitness += fitness;
             total_trials +=1;
+
+            // new line for a new trial
+            ReceiverBehaviorFile1 << endl;
+            Stage1Fitness << endl;
+            LandmarkFile << endl;
         }
     }
+        // close the files for that env
+    ReceiverBehaviorFile1.close();
+    Stage1Fitness.close();
+    LandmarkFile.close();
     return total_fitness / total_trials;
 }
 
@@ -994,7 +1005,6 @@ int main (int argc, const char* argv[])
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(stage1);
     search.ExecuteSearch();
-
 
     // // Stage 2: Evolution of Signaller
     // search.SetSearchTerminationFunction(TerminationFunction);

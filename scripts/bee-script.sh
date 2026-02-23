@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=bee_hard_mode_only
+#SBATCH --job-name=receiver_only_task
 #SBATCH --output=results/slurm/%x/%A/%x-%A-run-%a.out    # Standard output
 #SBATCH --error=results/slurm//%x/%A/%x-%A-run-%a.err     # Error log
 #SBATCH --nodes=1
