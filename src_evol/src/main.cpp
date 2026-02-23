@@ -16,6 +16,7 @@ const int LN = 3;                   // Number of landmarks in the environment
 const double StepSize = 0.1;
 const double RunDuration = 300.0;
 const double TransDuration = 150.0;
+const double HarshDuration = 30.0;
 const double MinLength = 50.0;      
 const double mindist = 3.0;         
 
@@ -256,7 +257,9 @@ double stage1(TVector<double> &genotype, RandomState &rs){
                     distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
 
                     // if the distance is within a threshold set the score to be perfect
-                    if (distance_food_receiver < mindist){
+                    if (distance_food_receiver < 1 && time > HarshDuration){
+                        distance_food_receiver = 0;
+                    } else if (distance_food_receiver < mindist){
                         distance_food_receiver = 0;
                     }
                     totalScore += distance_food_receiver;
