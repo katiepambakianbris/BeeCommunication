@@ -282,7 +282,7 @@ double stage1(TVector<double> &genotype, RandomState &rs){
 }
 
 
-double signaller_food_to_home(TVector<double> &genotype, RandomState &rs){
+double task_signaller_food_to_home(TVector<double> &genotype, RandomState &rs){
     // trial variables 
     double food_location;
     double total_trials = 0;
@@ -624,13 +624,10 @@ double RecordBehaviorStage1(TSearch &s, RandomState &rs){
                 if (scoringTime > 0){
                     Stage1Fitness << 1 - ((totalScore/scoringTime)/ArenaLength) << " ";
                 }
-
                 // record the neural state at the end of each time step 
-                
                 Neuron1 << AgentReceiver.NervousSystem.NeuronState(0) << " ";
-                Neuron1 << AgentReceiver.NervousSystem.NeuronState(1) << " ";
-                Neuron1 << AgentReceiver.NervousSystem.NeuronState(2) << " ";
-
+                Neuron2 << AgentReceiver.NervousSystem.NeuronState(1) << " ";
+                Neuron3 << AgentReceiver.NervousSystem.NeuronState(2) << " ";
             }
 
             // END OF TRIAL
@@ -646,6 +643,9 @@ double RecordBehaviorStage1(TSearch &s, RandomState &rs){
             ReceiverBehaviorFile1 << endl;
             Stage1Fitness << endl;
             LandmarkFile << endl;
+            Neuron1 << endl;
+            Neuron2 << endl;
+            Neuron3 << endl;
         }
     }
         // close the files for that env
@@ -778,8 +778,8 @@ double RecordBehaviorStage2(TSearch &s, RandomState &rs){
                 // record the neural state at the end of each time step 
                 
                 Neuron1 << AgentReceiver.NervousSystem.NeuronState(0) << " ";
-                Neuron1 << AgentReceiver.NervousSystem.NeuronState(1) << " ";
-                Neuron1 << AgentReceiver.NervousSystem.NeuronState(2) << " ";
+                Neuron2 << AgentReceiver.NervousSystem.NeuronState(1) << " ";
+                Neuron3 << AgentReceiver.NervousSystem.NeuronState(2) << " ";
 
             }
 
@@ -796,6 +796,9 @@ double RecordBehaviorStage2(TSearch &s, RandomState &rs){
             SignallerBehaviorFile1 << endl;
             Stage2Fitness << endl;
             LandmarkFile << endl;
+            Neuron1 << endl;
+            Neuron2 << endl;
+            Neuron3 << endl;
         }
     }
         // close the files for that env
@@ -1245,14 +1248,14 @@ int main (int argc, const char* argv[])
     /* Evolve */
 
     // Stage 1: Evolution of Reciver
-    search.SetSearchTerminationFunction(TerminationFunction);
-    search.SetEvaluationFunction(stage1);
-    search.ExecuteSearch();
+    // search.SetSearchTerminationFunction(TerminationFunction);
+    // search.SetEvaluationFunction(stage1);
+    // search.ExecuteSearch();
 
     // // Stage 2: Evolution of Signaller
-    // search.SetSearchTerminationFunction(TerminationFunction);
-    // search.SetEvaluationFunction(stage2);
-    // search.ExecuteSearch();
+    search.SetSearchTerminationFunction(TerminationFunction);
+    search.SetEvaluationFunction(task_signaller_food_to_home);
+    search.ExecuteSearch();
 
     // // Stage 3: Join task
     // search.SetSearchTerminationFunction(TerminationFunction);
