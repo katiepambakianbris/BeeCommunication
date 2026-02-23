@@ -215,7 +215,6 @@ double stage1(TVector<double> &genotype, RandomState &rs){
     double distance_food_receiver;
 
     // **** create the receiver ****
-
     // Map genotype to phenotype
     TVector<double> phenotypeReceiver;
     phenotypeReceiver.SetBounds(1, (int)(VectSize/2));
@@ -265,9 +264,7 @@ double stage1(TVector<double> &genotype, RandomState &rs){
                     totalScore += distance_food_receiver;
                     scoringTime += 1;
                 }
-
             }
-
             // END OF TRIAL
             // score at the end of this trial
             double fitness = 1 - ((totalScore/scoringTime)/MinLength);
@@ -457,6 +454,12 @@ double RecordBehaviorStage1(TSearch &s, RandomState &rs){
     ofstream LandmarkFile;
     LandmarkFile.open(dir + "landmark_location_stage1_"+current_run+".dat");
 
+    // files to save the neuron state
+    ofstream Neuron1, Neuron2, Neuron3;
+    Neuron1.open(dir + "neuron1_stage1_"+current_run+".dat");
+    Neuron2.open(dir + "neuron2_stage1_"+current_run+".dat");
+    Neuron3.open(dir + "neuron3_stage1_"+current_run+".dat");
+
     // trial variables 
     double food_location;
     double total_trials = 0;
@@ -544,6 +547,13 @@ double RecordBehaviorStage1(TSearch &s, RandomState &rs){
                 if (scoringTime > 0){
                     Stage1Fitness << 1 - ((totalScore/scoringTime)/MinLength) << " ";
                 }
+
+                // record the neural state at the end of each time step 
+                
+                Neuron1 << AgentReceiver.NervousSystem.NeuronState(0) << " ";
+                Neuron1 << AgentReceiver.NervousSystem.NeuronState(1) << " ";
+                Neuron1 << AgentReceiver.NervousSystem.NeuronState(2) << " ";
+
             }
 
             // END OF TRIAL
@@ -565,6 +575,9 @@ double RecordBehaviorStage1(TSearch &s, RandomState &rs){
     ReceiverBehaviorFile1.close();
     Stage1Fitness.close();
     LandmarkFile.close();
+    Neuron1.close();
+    Neuron2.close();
+    Neuron3.close();
     return total_fitness / total_trials;
 }
 
