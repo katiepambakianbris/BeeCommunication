@@ -758,7 +758,7 @@ double RecordBehaviorStage2(TSearch &s, RandomState &rs){
                 AgentSignaller.Step(StepSize);
 
                 if (time >= TransDuration){
-                    distance_receiver_signaller = fabs(AgentReceiver.GetPosition() - AgentSignaller.GetPosition());
+                    distance_receiver_signaller = fabs(0 - AgentSignaller.GetPosition());
 
                     // if the distance is within a threshold set the score to be perfect
                     if (distance_receiver_signaller < 1 && time > HarshDuration){
@@ -1044,6 +1044,7 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
 int TerminationFunction(int Generation, double BestPerf, double AvgPerf, double PerfVar)
 {
     if (BestPerf > 0.99) {
+        cout << "terminating" << endl;
         return 1;
     }
     else {
@@ -1193,8 +1194,8 @@ int main (int argc, const char* argv[])
 
     // Define output home directory
     int v = 0;
-    std::string result_dir = "/user/home/yj23812/BeeCommunication/results/"+ date_as_string() +"/" + slurm_job_id;
-    // std::string result_dir = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/"+ date_as_string() +"/v";
+    // std::string result_dir = "/user/home/yj23812/BeeCommunication/results/"+ date_as_string() +"/" + slurm_job_id;
+    std::string result_dir = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/"+ date_as_string() +"/v";
 
     std::string dir = result_dir +"/batch_"+ batch_number +"/run_"+ current_run +"/";
     // there is not acutally an error here
@@ -1251,7 +1252,7 @@ int main (int argc, const char* argv[])
     // search.SetSearchTerminationFunction(TerminationFunction);
     // search.SetEvaluationFunction(stage1);
     // search.ExecuteSearch();
-
+    
     // // Stage 2: Evolution of Signaller
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(task_signaller_food_to_home);
@@ -1266,7 +1267,7 @@ int main (int argc, const char* argv[])
 
 
     if (search.BestPerformance() > 0.99) {
-        RecordBehaviorStage1(search, search.getRandomState());
+        RecordBehaviorStage2(search, search.getRandomState());
     }
 
     #ifdef PRINTTOFILE
