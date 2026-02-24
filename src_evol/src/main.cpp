@@ -243,6 +243,7 @@ double stage1(TVector<double> &genotype, RandomState &rs){
 
             // Initialise the agent for this trial
             AgentReceiver.SetPosition(0);
+            AgentReceiver.ResetNeuralState();
             AgentReceiver.SetOther(start+step*env);
 
             double scoringTime = 0.0;
@@ -292,16 +293,11 @@ double task_signaller_food_to_home(TVector<double> &genotype, RandomState &rs){
 
     TVector<double> phenotypeReceiver, phenotypeSignaller;
 
-    phenotypeReceiver.SetBounds(1, (int)(VectSize/2));
     phenotypeSignaller.SetBounds(1, (int)(VectSize/2));
 
     GenPhenMapping(genotype, phenotypeSignaller, 1);
-    GenPhenMapping(genotype, phenotypeReceiver, (int)(N*N + 5*N +1));
 
     CountingAgent AgentSignaler(N, phenotypeSignaller);
-    CountingAgent AgentReceiver(N, phenotypeReceiver);
-
-    AgentReceiver.SetPosition(0);
 
     // **** Generate landmarks (using leapfrog method) ****
     TVector<double> landmarkPositions;
@@ -319,6 +315,8 @@ double task_signaller_food_to_home(TVector<double> &genotype, RandomState &rs){
 
             // Initialise the agent for this trial
             AgentSignaler.SetPosition(food_location);
+            AgentSignaler.ResetNeuralState();
+            AgentSignaler.ResetSensors();
 
             double scoringTime = 0.0;
             double totalScore = 0.0;
@@ -327,11 +325,11 @@ double task_signaller_food_to_home(TVector<double> &genotype, RandomState &rs){
                 // only let the Signaller move
                 AgentSignaler.SenseFood(food_location);
                 AgentSignaler.SenseLandmarks(LN, landmarkPositions);
-                AgentSignaler.SenseOther(AgentReceiver.pos);
+                AgentSignaler.SenseOther(0);
                 AgentSignaler.Step(StepSize);
 
                 if (time > TransDuration){
-                    distance_receiver_signaller = fabs(AgentReceiver.GetPosition() - AgentSignaler.GetPosition());
+                    distance_receiver_signaller = fabs(0 - AgentSignaler.GetPosition());
 
                     // if the distance is within a threshold set the score to be perfect
                     if (distance_receiver_signaller < 1 && time > HarshDuration){
@@ -406,7 +404,7 @@ double stage2(TVector<double> &genotype, RandomState &rs){
         AgentSignaler.SetPosition(location);
 
         // put the agent in its home position
-        AgentReceiver.SetPosition(0);
+        AgentSignaler.ResetNeuralState();
 
         // Let the Signaller Explore the enviornment (for 150) -> not scored (find the food)
         for (double time=0; time < RunDuration; time += StepSize){
@@ -575,15 +573,16 @@ double RecordBehaviorStage1(TSearch &s, RandomState &rs){
 
     for (int i=0; i<3; i++){
         genLandmarks_LeapFrog(rs, landmarkPositions);
-        AgentReceiver.ResetSensors();
-        // Reset neural state
-        for (int i = 1; i <= N; i++)
-        {
-            AgentReceiver.NervousSystem.SetNeuronState(i, savedstateReceiver[i]);
         
-        }
         // set each of the landmarks to be the location of the food
         for (int env =1; env<=LN;env++){
+            AgentReceiver.ResetSensors();
+            // Reset neural state
+            for (int i = 1; i <= N; i++)
+            {
+                AgentReceiver.NervousSystem.SetNeuronState(i, savedstateReceiver[i]);
+            
+            }
             // set the food to be at the ith landmark location
             food_location = landmarkPositions[env];
             for (int i = 1; i <= LN; i += 1){
@@ -593,6 +592,7 @@ double RecordBehaviorStage1(TSearch &s, RandomState &rs){
 
             // Initialise the agent for this trial
             AgentReceiver.SetPosition(0);
+            AgentReceiver.ResetNeuralState();
             AgentReceiver.SetOther(start+step*env);
 
             double scoringTime = 0.0;
@@ -625,9 +625,9 @@ double RecordBehaviorStage1(TSearch &s, RandomState &rs){
                     Stage1Fitness << 1 - ((totalScore/scoringTime)/ArenaLength) << " ";
                 }
                 // record the neural state at the end of each time step 
-                Neuron1 << AgentReceiver.NervousSystem.NeuronState(0) << " ";
-                Neuron2 << AgentReceiver.NervousSystem.NeuronState(1) << " ";
-                Neuron3 << AgentReceiver.NervousSystem.NeuronState(2) << " ";
+                Neuron1 << AgentReceiver.NervousSystem.NeuronState(1) << " ";
+                Neuron2 << AgentReceiver.NervousSystem.NeuronState(2) << " ";
+                Neuron3 << AgentReceiver.NervousSystem.NeuronState(3) << " ";
             }
 
             // END OF TRIAL
@@ -724,13 +724,7 @@ double RecordBehaviorStage2(TSearch &s, RandomState &rs){
 
     for (int i=0; i<3; i++){
         genLandmarks_LeapFrog(rs, landmarkPositions);
-        AgentSignaller.ResetSensors();
-        // Reset neural state
-        for (int i = 1; i <= N; i++)
-        {
-            AgentSignaller.NervousSystem.SetNeuronState(i, savedStateSignaller[i]);
-        
-        }
+
         // set each of the landmarks to be the location of the food
         for (int env =1; env<=LN;env++){
             // set the food to be at the ith landmark location
@@ -740,6 +734,13 @@ double RecordBehaviorStage2(TSearch &s, RandomState &rs){
             }
             LandmarkFile << food_location << " ";
 
+            AgentSignaller.ResetSensors();
+            // Reset neural state
+            for (int i = 1; i <= N; i++)
+            {
+                AgentSignaller.NervousSystem.SetNeuronState(i, savedStateSignaller[i]);
+            
+            }
             // Initialise the agent for this trial
             AgentSignaller.SetPosition(food_location);
 
@@ -777,9 +778,9 @@ double RecordBehaviorStage2(TSearch &s, RandomState &rs){
 
                 // record the neural state at the end of each time step 
                 
-                Neuron1 << AgentReceiver.NervousSystem.NeuronState(0) << " ";
-                Neuron2 << AgentReceiver.NervousSystem.NeuronState(1) << " ";
-                Neuron3 << AgentReceiver.NervousSystem.NeuronState(2) << " ";
+                Neuron1 << AgentReceiver.NervousSystem.NeuronState(1) << " ";
+                Neuron2 << AgentReceiver.NervousSystem.NeuronState(2) << " ";
+                Neuron3 << AgentReceiver.NervousSystem.NeuronState(3) << " ";
 
             }
 
@@ -914,7 +915,6 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
 
                 totaltrials ++;
             }
-
 
             // Stage 2
             // calculating what the set other should be

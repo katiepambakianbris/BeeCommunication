@@ -125,6 +125,6 @@ void CountingAgent::Step(double StepSize)
 	// Update the nervous system
 	NervousSystem.EulerStep(StepSize);
 
-	// Update the body position
+	// Update the body position (motor)
 	pos += StepSize * gain * (NervousSystem.NeuronOutput(2) - NervousSystem.NeuronOutput(1));
 }
