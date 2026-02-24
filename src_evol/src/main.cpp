@@ -1044,7 +1044,6 @@ double RecordBehavior(TSearch &s, RandomState &rs) {
 int TerminationFunction(int Generation, double BestPerf, double AvgPerf, double PerfVar)
 {
     if (BestPerf > 0.99) {
-        cout << "terminating" << endl;
         return 1;
     }
     else {
