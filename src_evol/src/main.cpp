@@ -302,9 +302,6 @@ double task_signaller_food_to_home(TVector<double> &genotype, RandomState &rs){
     // **** Generate landmarks (using leapfrog method) ****
     TVector<double> landmarkPositions;
 
-    // calculating what the set other should be (value between 0.5 and 1.5)
-    double start = 0.5;
-
     for (int i=0; i<3; i++){
         genLandmarks_LeapFrog(rs, landmarkPositions);
         
@@ -380,9 +377,6 @@ double stage2(TVector<double> &genotype, RandomState &rs){
     // **** Generate landmarks (using leapfrog method) ****
     TVector<double> landmarkPositions;
 
-    // calculating what the set other should be (value between 0.5 and 1.5)
-    double start = 0.5;
-
     for (int i=0; i<3; i++){
         genLandmarks_LeapFrog(rs, landmarkPositions);
         
@@ -408,7 +402,7 @@ double stage2(TVector<double> &genotype, RandomState &rs){
                 AgentSignaler.SenseOther(0);
                 AgentSignaler.Step(StepSize);
 
-                if (time > TransDuration){
+                if (time >= TransDuration){
                     distance_receiver_signaller = fabs(0 - AgentSignaler.GetPosition());
 
                     // if the distance is within a threshold set the score to be perfect
@@ -435,7 +429,7 @@ double stage2(TVector<double> &genotype, RandomState &rs){
                 AgentSignaler.SenseOther(0);
                 AgentSignaler.Step(StepSize);
 
-                if (time > TransDuration){
+                if (time >= TransDuration){
                     distance_receiver_signaller = fabs(0 - AgentSignaler.GetPosition());
 
                     // if the distance is within a threshold set the score to be perfect
@@ -444,8 +438,8 @@ double stage2(TVector<double> &genotype, RandomState &rs){
                     } else if (distance_receiver_signaller < mindist){
                         distance_receiver_signaller = 0;
                     }
-                    scoringTime_phase2 += distance_receiver_signaller;
-                    totalScore_phase2 += 1;
+                    totalScore_phase2 += distance_receiver_signaller;
+                    scoringTime_phase1 += 1;
                 }
             }
 
@@ -453,7 +447,19 @@ double stage2(TVector<double> &genotype, RandomState &rs){
             // score at the end of this trial
 
             // averaged score
-            double average_both_trials = ((totalScore_phase1/scoringTime_phase1)/ArenaLength) + ((totalScore_phase2/scoringTime_phase2)/ArenaLength);
+            double avg1 = 0.0;
+            double avg2 = 0.0;
+
+            if (scoringTime_phase1 >0){
+                avg1 = ((totalScore_phase1/scoringTime_phase1)/ArenaLength);
+            }
+
+            if (scoringTime_phase2 > 0){
+                avg2 =((totalScore_phase2/scoringTime_phase2)/ArenaLength);
+            }
+
+            double average_both_trials = (avg1 + avg2)/2;
+
             double fitness = 1 - average_both_trials;
             if (fitness < 0.0){
                 fitness = 0.0;
@@ -915,8 +921,8 @@ double RecordBehaviorStage2(TSearch &s, RandomState &rs){
                     } else if (distance_receiver_signaller < mindist){
                         distance_receiver_signaller = 0;
                     }
-                    scoringTime_phase2 += distance_receiver_signaller;
-                    totalScore_phase2 += 1;
+                    totalScore_phase2 += distance_receiver_signaller;
+                    scoringTime_phase2 += 1;
                 }
                 
                 SignallerBehaviorFile1 << AgentSignaller.GetPosition() << " ";
@@ -935,7 +941,19 @@ double RecordBehaviorStage2(TSearch &s, RandomState &rs){
 
             // END OF TRIAL
             // score at the end of this trial
-            double average_both_trials = ((totalScore_phase1/scoringTime_phase1)/ArenaLength) + ((totalScore_phase2/scoringTime_phase2)/ArenaLength);
+            double avg1 = 0.0;
+            double avg2 = 0.0;
+
+            if (scoringTime_phase1 >0){
+                avg1 = ((totalScore_phase1/scoringTime_phase1)/ArenaLength);
+            }
+
+            if (scoringTime_phase2 > 0){
+                avg2 =((totalScore_phase2/scoringTime_phase2)/ArenaLength);
+            }
+
+            double average_both_trials = (avg1 + avg2)/2;
+
             double fitness = 1 - average_both_trials;
             if (fitness < 0.0){
                 fitness = 0.0;
