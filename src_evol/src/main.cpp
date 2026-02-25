@@ -351,8 +351,6 @@ double task_signaller_food_to_home(TVector<double> &genotype, RandomState &rs){
     return total_fitness / total_trials;
 }
 
-
-
 // ---------------------------------------------------------
 // stage 2: Evolution of signaller
 // only looking a the distance between the Signaller and the
@@ -403,7 +401,7 @@ double stage2(TVector<double> &genotype, RandomState &rs){
                 AgentSignaler.Step(StepSize);
 
                 if (time >= TransDuration){
-                    distance_receiver_signaller = fabs(0 - AgentSignaler.GetPosition());
+                    distance_receiver_signaller = fabs(food_location - AgentSignaler.GetPosition());
 
                     // if the distance is within a threshold set the score to be perfect
                     if (distance_receiver_signaller < 1 && time > HarshDuration){
@@ -439,7 +437,7 @@ double stage2(TVector<double> &genotype, RandomState &rs){
                         distance_receiver_signaller = 0;
                     }
                     totalScore_phase2 += distance_receiver_signaller;
-                    scoringTime_phase1 += 1;
+                    scoringTime_phase2 += 1;
                 }
             }
 
@@ -874,7 +872,7 @@ double RecordBehaviorStage2(TSearch &s, RandomState &rs){
                 AgentSignaller.Step(StepSize);
 
                 if (time > TransDuration){
-                    distance_receiver_signaller = fabs(0 - AgentSignaller.GetPosition());
+                    distance_receiver_signaller = fabs(food_location- AgentSignaller.GetPosition());
 
                     // if the distance is within a threshold set the score to be perfect
                     if (distance_receiver_signaller < 1 && time > HarshDuration){
@@ -886,7 +884,7 @@ double RecordBehaviorStage2(TSearch &s, RandomState &rs){
                     scoringTime_phase1 += 1;
                 }
 
-                                SignallerBehaviorFile1 << AgentSignaller.GetPosition() << " ";
+                SignallerBehaviorFile1 << AgentSignaller.GetPosition() << " ";
                 
                 if (scoringTime_phase1 > 0){
                     Stage2Fitness << 1 - ((totalScore_phase1/scoringTime_phase1)/ArenaLength) << " ";
