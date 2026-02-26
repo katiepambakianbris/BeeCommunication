@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=stage_2_task
 #SBATCH --output=results/slurm/%x/%A/%x-%A-run-%a.out    # Standard output
-#SBATCH --error=results/slurm//%x/%A/%x-%A-run-%a.err     # Error log
+#SBATCH --error=results/slurm/%x/%A/%x-%A-run-%a.err     # Error log
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=16
