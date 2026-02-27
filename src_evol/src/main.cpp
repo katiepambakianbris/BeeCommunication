@@ -251,7 +251,6 @@ double stage1(TVector<double> &genotype, RandomState &rs){
 
             // Let the Receiver and Signaller Explore the enviornment (for 150) -> not scored
             for (double time=0; time < RunDuration; time += StepSize){
-                AgentReceiver.SenseFood(food_location);
                 AgentReceiver.SenseLandmarks(LN, landmarkPositions);
                 AgentReceiver.SetOther(start+step*env);
                 AgentReceiver.Step(StepSize);
@@ -561,7 +560,6 @@ double RecordBehaviorStage1(TSearch &s, RandomState &rs){
 
             // Let the Receiver and Signaller Explore the enviornment (for 150) -> not scored
             for (double time=0; time < RunDuration; time += StepSize){
-                AgentReceiver.SenseFood(food_location);
                 AgentReceiver.SenseLandmarks(LN, landmarkPositions);
                 AgentReceiver.SetOther(start+step*env);
                 AgentReceiver.Step(StepSize);
@@ -1186,9 +1184,9 @@ int main (int argc, const char* argv[])
     /* Evolve */
 
     // Stage 1: Evolution of Reciver
-    // search.SetSearchTerminationFunction(TerminationFunction);
-    // search.SetEvaluationFunction(stage1);
-    // search.ExecuteSearch();
+    search.SetSearchTerminationFunction(TerminationFunction);
+    search.SetEvaluationFunction(stage1);
+    search.ExecuteSearch();
     
     // // Stage 1.5: Evolution of Signaller (food to home)
     // search.SetSearchTerminationFunction(TerminationFunction);
@@ -1196,9 +1194,9 @@ int main (int argc, const char* argv[])
     // search.ExecuteSearch();
 
     // Stage 2: Evolution of Signaller (home to food to home)
-    search.SetSearchTerminationFunction(TerminationFunction);
-    search.SetEvaluationFunction(stage2);
-    search.ExecuteSearch();
+    // search.SetSearchTerminationFunction(TerminationFunction);
+    // search.SetEvaluationFunction(stage2);
+    // search.ExecuteSearch();
 
     // // Stage 3: Join task
     // search.SetSearchTerminationFunction(TerminationFunction);
@@ -1209,7 +1207,7 @@ int main (int argc, const char* argv[])
 
 
     if (search.BestPerformance() > 0.99) {
-        RecordBehaviorStage2(search, search.getRandomState());
+        RecordBehaviorStage1(search, search.getRandomState());
     }
 
     #ifdef PRINTTOFILE
