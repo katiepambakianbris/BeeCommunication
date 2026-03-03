@@ -644,7 +644,7 @@ double RecordBehavior(TSearch &s) {
     // Use this to save the neural state during learning
     for (int env = 1; env <= LN; env += 1){
 
-        for (int delay=0; delay<=10; delay +=5){ 
+        for (int delay=0; delay<=0; delay +=5){ 
 
             std::string s_env = std::to_string(env);
             std::string s_delay = std::to_string(delay);
@@ -653,7 +653,7 @@ double RecordBehavior(TSearch &s) {
             ofstream BehaviorFile2;
             BehaviorFile2.open( dir + "behavior_" + current_run + "_Env" + s_env + "_delay" + s_delay + "_Phase2.dat");
             ofstream BehaviorFile3;
-            BehaviorFile3.open( dir + "behavior_" + current_run + "_Env" + s_env + "_delay" + s_delay + "_Phase3.dat");;
+            BehaviorFile3.open( dir + "behavior_" + current_run + "_Env" + s_env + "_delay" + s_delay + "_Phase3.dat");
 
             // stores the location of the landmarks and the food
             ofstream LandmarkFile1, LandmarkFile2, LandmarkFile3;
@@ -711,9 +711,9 @@ double RecordBehavior(TSearch &s) {
             }
 
             // Testing Phase
-            for (double ref_var = -2.0; ref_var <= 2.0; ref_var += 1.0)
+            for (double ref_var = -2.0; ref_var <= 2.0; ref_var += 2.0)
             {
-                for (double sep_var = -2.0; sep_var <= 2.0; sep_var += 1.0)
+                for (double sep_var = -2.0; sep_var <= 2.0; sep_var += 2.0)
                 {
                     // arrange the landmarks in position  
                     for (int i = 1; i <= LN; i += 1)
@@ -723,13 +723,12 @@ double RecordBehavior(TSearch &s) {
                     food_loc_mod = landmarkPositionTest[env];
                     // write the landmarks to the output
                     for (int i = 1; i <= LN; i += 1){
-                        LandmarkFile1 << landmarkPositions[i] << " ";
+                        LandmarkFile3 << landmarkPositionTest[i] << " ";
                     }
-                    LandmarkFile1 << food_loc << " ";
+                    LandmarkFile3 << food_loc << " ";
 
                     // setup
                     Agent.ResetPosition(0);
-                    Agent.ResetNeuralState();
                     for (int i = 1; i <= N; i++)
                     {
                         Agent.NervousSystem.SetNeuronState(i, savedstate[i]);
@@ -770,18 +769,10 @@ double RecordBehavior(TSearch &s) {
 
                     totaltrials += 1;
                 
-                    BehaviorFile1 << endl;
-                    BehaviorFile2 << endl;
                     BehaviorFile3 << endl;
-
-                    LandmarkFile1 << endl;
-                    LandmarkFile2 << endl;
                     LandmarkFile3 << endl;
-
                     FitnessFile1 << endl;
-                
                 }
-
             }
             BehaviorFile1.close();
             BehaviorFile2.close();
