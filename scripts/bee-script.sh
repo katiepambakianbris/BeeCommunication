@@ -16,5 +16,9 @@ module add languages/python/3.12.3
  
 SRC_DIR="src_evol"
 
+cd $SRC_DIR
+make 
+cd ..
+
 # running the runscript.py 
 python $SRC_DIR/runscript.py 0 5 $SLURM_ARRAY_TASK_ID $SLURM_ARRAY_JOB_ID $SRC_DIR/bin/main 
