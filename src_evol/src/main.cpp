@@ -616,10 +616,6 @@ double RecordBehavior(TSearch &s) {
 
     CountingAgent Agent( N, phenotype);
 
-    // Save state
-    TVector<double> savedstate;
-    savedstate.SetBounds(1,N);
-
     // Bookeeping variables
     double totaltrials = 0;
     double totaltime;
@@ -639,11 +635,19 @@ double RecordBehavior(TSearch &s) {
     TVector<double> landmarkPositionTest;
     landmarkPositionTest.SetBounds(1,LN);
 
+
+    // save the state
+    TVector<double> savedstate;
+    savedstate.SetBounds(1,N);
+
+    // Saved each of their neural states 
+    for (int i = 1; i <= N; i++)
+    {
+        savedstate[i] = Agent.NervousSystem.NeuronState(i);
+    }
+
     // Phase
-
-    // Use this to save the neural state during learning
     for (int env = 1; env <= LN; env += 1){
-
         for (int delay=0; delay<=0; delay +=5){ 
 
             std::string s_env = std::to_string(env);
@@ -677,6 +681,10 @@ double RecordBehavior(TSearch &s) {
 
             Agent.ResetPosition(0);
             Agent.ResetNeuralState();
+            for (int i = 1; i <= N; i++)
+            {
+                Agent.NervousSystem.SetNeuronState(i, savedstate[i]);
+            }
 
             BehaviorFile1 << Agent.Position() << " ";
 
@@ -689,12 +697,6 @@ double RecordBehavior(TSearch &s) {
                 BehaviorFile1 << Agent.Position() << " ";
             }
             Agent.ResetSensors();
-
-            // Saved each of their neural states 
-            for (int i = 1; i <= N; i++)
-            {
-                savedstate[i] = Agent.NervousSystem.NeuronState(i);
-            }
 
             // 2. delay
             Agent.ResetPosition(0); 
@@ -725,7 +727,7 @@ double RecordBehavior(TSearch &s) {
                     for (int i = 1; i <= LN; i += 1){
                         LandmarkFile3 << landmarkPositionTest[i] << " ";
                     }
-                    LandmarkFile3 << food_loc << " ";
+                    LandmarkFile3 << food_loc_mod << " ";
 
                     // setup
                     Agent.ResetPosition(0);
