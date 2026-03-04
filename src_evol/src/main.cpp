@@ -1129,7 +1129,7 @@ int main (int argc, const char* argv[])
 
     // Define output home directory
     int v = 0;
-    std::string result_dir = "/user/home/yj23812/BeeCommunication/results/"+ date_as_string() +"/" + slurm_job_id;
+    std::string result_dir = "/user/work/yj23812/BeeCommunication/results/"+ date_as_string() +"/" + slurm_job_id;
     // std::string result_dir = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/"+ date_as_string() +"/v";
 
     std::string dir = result_dir +"/batch_"+ batch_number +"/run_"+ current_run +"/";
