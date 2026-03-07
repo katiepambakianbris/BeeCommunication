@@ -530,11 +530,7 @@ double stage3(TVector<double> &genotype, RandomState &rs){
             AgentReceiver.ResetSensors();
             int location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
             AgentSignaller.SetPosition(location);
-            // restore the signaller agents state
-            for (int i = 1; i <= N; i++)
-            {
-                AgentSignaller.NervousSystem.SetNeuronState(i, savedstateSignaller[i]);
-            }
+            AgentSignaller.ResetSensors();
 
             double scoringTime_phase2 = 0.0;
             double totalScore_phase2 = 0.0;
