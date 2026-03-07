@@ -524,20 +524,17 @@ double stage3(TVector<double> &genotype, RandomState &rs){
             food_location = landmarkPositions[env];
 
             // ********** PHASE 1 **********
-            // ********** PHASE 2 **********
+            // The chatting phase
+
             // setup 
             AgentReceiver.SetPosition(0);
             AgentReceiver.ResetSensors();
             int location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
             AgentSignaller.SetPosition(location);
-            // restore the signaller agents state
-            for (int i = 1; i <= N; i++)
-            {
-                AgentSignaller.NervousSystem.SetNeuronState(i, savedstateSignaller[i]);
-            }
+            AgentSignaller.ResetSensors();
 
-            double scoringTime_phase2 = 0.0;
-            double totalScore_phase2 = 0.0;
+            double scoringTime_phase1 = 0.0;
+            double totalScore_phase1 = 0.0;
 
             for (double time=0; time < RunDuration; time += StepSize){
                 // Receiver see environemnt 
@@ -553,16 +550,6 @@ double stage3(TVector<double> &genotype, RandomState &rs){
                 AgentSignaller.Step(StepSize);
 
                 if (time > TransDuration){
-
-                    // distance between the receiver and the food
-                    distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
-                    
-                    if (distance_food_receiver < 1 && time > HarshDuration){
-                        distance_food_receiver = 0;
-                    } else if (distance_food_receiver < mindist){
-                        distance_food_receiver = 0;
-                    }
-
                     // distance between the signaller and receiver
 
                     distance_signaller_receiver = fabs(AgentReceiver.GetPosition() - AgentSignaller.GetPosition());
@@ -573,12 +560,64 @@ double stage3(TVector<double> &genotype, RandomState &rs){
                     }
 
                     // average distance
-                    totalScore_phase2 += (distance_food_receiver + distance_signaller_receiver) /2;
+                    totalScore_phase1 += (distance_signaller_receiver);
+                    scoringTime_phase1 += 1;
+                }
+            }
+
+            // ********** PHASE 2 **********
+            // Receiver only, going to food
+
+            // Setup
+            AgentReceiver.SetPosition(0);
+            AgentReceiver.ResetSensors();
+            int location_new = SIGNALLEREND; // put the signaller the futhest from the receiver
+            AgentSignaller.SetPosition(location_new);
+            AgentSignaller.ResetSensors();
+
+            double scoringTime_phase2 = 0.0;
+            double totalScore_phase2 = 0.0;
+
+            for (double time=0; time<RunDuration; time+=StepSize){
+                // Receiver see environemnt 
+                AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+
+                // Move the agents
+                AgentReceiver.Step(StepSize);
+
+                if (time > TransDuration){
+                    // distance between the receiver and the food
+                    distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
+                    
+                    if (distance_food_receiver < 1 && time > HarshDuration){
+                        distance_food_receiver = 0;
+                    } else if (distance_food_receiver < mindist){
+                        distance_food_receiver = 0;
+                    }
+
+                    // average distance
+                    totalScore_phase2 += (distance_food_receiver) ;
                     scoringTime_phase2 += 1;
                 }
             }
 
-            double fitness = 1 - ((totalScore_phase2/scoringTime_phase2)/ArenaLength);
+            // END OF TRIAL
+            // score at the end of this trial
+            // averaged score
+            double avg1 = 0.0;
+            double avg2 = 0.0;
+
+            if (scoringTime_phase1 >0){
+                avg1 = ((totalScore_phase1/scoringTime_phase1)/ArenaLength);
+            }
+
+            if (scoringTime_phase2 > 0){
+                avg2 =((totalScore_phase2/scoringTime_phase2)/ArenaLength);
+            }
+
+            double average_both_trials = (avg1 + avg2)/2;
+
+            double fitness = 1 - average_both_trials;
             if (fitness < 0.0){
                 fitness = 0.0;
             }
@@ -1178,13 +1217,6 @@ double RecordBehaviorStage3(TSearch &s, RandomState &rs){
             }
             LandmarkFile << food_location << " ";
 
-            // Setup
-            int location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
-            AgentReceiver.SetPosition(0);
-            AgentReceiver.ResetSensors();
-            AgentSignaller.SetPosition(location);
-            AgentSignaller.ResetSensors();
-
             // Reset neural state
             for (int i = 1; i <= N; i++)
             {
@@ -1196,14 +1228,21 @@ double RecordBehaviorStage3(TSearch &s, RandomState &rs){
                 AgentReceiver.NervousSystem.SetNeuronState(i, savedStateReceiver[i]);
             
             }
+            // ********* PHASE 1 ************
+            // Setup
+            int location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
+            AgentReceiver.SetPosition(0);
+            AgentReceiver.ResetSensors();
+            AgentSignaller.SetPosition(location);
+            AgentSignaller.ResetSensors();
 
             // record the initial position
             SignallerBehaviorFile << AgentSignaller.GetPosition() << " ";
             RecieverBehaviorFile << AgentReceiver.GetPosition() << " ";
 
-            // PHASE 2
-            double scoringTime_phase2 = 0.0;
-            double totalScore_phase2 = 0.0;
+           
+            double scoringTime_phase1 = 0.0;
+            double totalScore_phase1 = 0.0;
 
             for (double time=0; time < RunDuration; time += StepSize){
                 // only let the Signaller move
@@ -1219,6 +1258,60 @@ double RecordBehaviorStage3(TSearch &s, RandomState &rs){
                 AgentSignaller.Step(StepSize);
 
                 if (time > TransDuration){
+
+                    distance_signaller_receiver = fabs(AgentReceiver.GetPosition() - AgentSignaller.GetPosition());
+
+                    // it has to be one away 
+                    if (distance_signaller_receiver < 1.5 && distance_signaller_receiver >= 0.5){
+                        distance_signaller_receiver = 0;
+                    }
+
+                    // average distance
+                    totalScore_phase1 += (distance_signaller_receiver);
+                    scoringTime_phase1 += 1;
+                }
+
+                SignallerBehaviorFile << AgentSignaller.GetPosition() << " ";
+                RecieverBehaviorFile << AgentReceiver.GetPosition() << " ";
+                
+                if (scoringTime_phase1 > 0){
+                    Stage3Fitness << 1 - ((totalScore_phase1/scoringTime_phase1)/ArenaLength) << " ";
+                }
+
+                // record the neural state at the end of each time step 
+                
+                NeuronS1 << AgentSignaller.NervousSystem.NeuronState(1) << " ";
+                NeuronS2 << AgentSignaller.NervousSystem.NeuronState(2) << " ";
+                NeuronS3 << AgentSignaller.NervousSystem.NeuronState(3) << " ";
+
+                NeuronR1 << AgentReceiver.NervousSystem.NeuronState(1) << " ";
+                NeuronR2 << AgentReceiver.NervousSystem.NeuronState(2) << " ";
+                NeuronR3 << AgentReceiver.NervousSystem.NeuronState(3) << " ";
+            }
+
+            // ********* PHASE 2 ************
+            // Setup
+            int location_new = SIGNALLEREND;
+            AgentReceiver.SetPosition(0);
+            AgentReceiver.ResetSensors();
+            AgentSignaller.SetPosition(location_new);
+            AgentSignaller.ResetSensors();
+
+            // record the initial position
+            SignallerBehaviorFile << AgentSignaller.GetPosition() << " ";
+            RecieverBehaviorFile << AgentReceiver.GetPosition() << " ";
+
+           
+            double scoringTime_phase2 = 0.0;
+            double totalScore_phase2 = 0.0;
+
+            for (double time=0; time < RunDuration; time += StepSize){
+                // only let the Signaller move
+                AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+                // Move receiver  agents
+                AgentReceiver.Step(StepSize);
+
+                if (time > TransDuration){
                     // distance between the receiver and the food
                     distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
                     
@@ -1229,23 +1322,16 @@ double RecordBehaviorStage3(TSearch &s, RandomState &rs){
                         distance_food_receiver = 0;
                     }
 
-                    distance_signaller_receiver = fabs(AgentReceiver.GetPosition() - AgentSignaller.GetPosition());
-
-                    // it has to be one away 
-                    if (distance_signaller_receiver < 1.5 && distance_signaller_receiver >= 0.5){
-                        distance_signaller_receiver = 0;
-                    }
-
                     // average distance
-                    totalScore_phase2 += (distance_food_receiver + distance_signaller_receiver) /2;
-                    scoringTime_phase2 += 1;
+                    totalScore_phase1 += (distance_food_receiver);
+                    scoringTime_phase1 += 1;
                 }
 
                 SignallerBehaviorFile << AgentSignaller.GetPosition() << " ";
                 RecieverBehaviorFile << AgentReceiver.GetPosition() << " ";
                 
-                if (scoringTime_phase2 > 0){
-                    Stage3Fitness << 1 - ((totalScore_phase2/scoringTime_phase2)/ArenaLength) << " ";
+                if (scoringTime_phase1 > 0){
+                    Stage3Fitness << 1 - ((totalScore_phase1/scoringTime_phase1)/ArenaLength) << " ";
                 }
 
                 // record the neural state at the end of each time step 
@@ -1261,7 +1347,21 @@ double RecordBehaviorStage3(TSearch &s, RandomState &rs){
 
             // END OF TRIAL
             // score at the end of this trial
-            double fitness = 1 - ((totalScore_phase2/scoringTime_phase2)/ArenaLength);
+            // averaged score
+            double avg1 = 0.0;
+            double avg2 = 0.0;
+
+            if (scoringTime_phase1 >0){
+                avg1 = ((totalScore_phase1/scoringTime_phase1)/ArenaLength);
+            }
+
+            if (scoringTime_phase2 > 0){
+                avg2 =((totalScore_phase2/scoringTime_phase2)/ArenaLength);
+            }
+
+            double average_both_trials = (avg1 + avg2)/2;
+
+            double fitness = 1 - average_both_trials;
             if (fitness < 0.0){
                 fitness = 0.0;
             }
