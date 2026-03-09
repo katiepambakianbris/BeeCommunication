@@ -581,7 +581,6 @@ double stage3(TVector<double> &genotype, RandomState &rs){
             for (double time=0; time<RunDuration; time+=StepSize){
                 // Receiver see environemnt 
                 AgentReceiver.SenseLandmarks(LN, landmarkPositions);
-
                 // Move the agents
                 AgentReceiver.Step(StepSize);
 
