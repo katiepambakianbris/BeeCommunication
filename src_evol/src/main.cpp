@@ -509,6 +509,8 @@ double FitnessFunction4(TVector<double> &genotype, RandomState &rs)
     // for each enviornment i, landmark i has the food 
     for (int env = 1; env <= LN; env += 1)
     {
+        Agent.ResetNeuralState();
+
         for (int delay=0; delay<=10; delay +=5){
             // Step 1: Setup
 
@@ -516,8 +518,8 @@ double FitnessFunction4(TVector<double> &genotype, RandomState &rs)
             food_loc = landmarkPositions[env];
         
             // reset position + neural state of the signaller
-            Agent.ResetPosition(0); 
-            Agent.ResetNeuralState();
+            Agent.ResetPosition(0);
+            Agent.ResetSensors();
 
             // Step 2: Training Phase
             for (double time = 0; time < RunDuration; time += StepSize)
@@ -526,7 +528,6 @@ double FitnessFunction4(TVector<double> &genotype, RandomState &rs)
                 Agent.SenseLandmarks(LN,landmarkPositions);
                 Agent.Step(StepSize);
             }
-            Agent.ResetSensors();
 
             // 2. delay
             Agent.ResetPosition(0); 
