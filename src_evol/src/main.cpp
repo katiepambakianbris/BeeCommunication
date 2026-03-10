@@ -804,13 +804,14 @@ double RecordBehavior4(TSearch &s) {
 
 
     // save the state
-    TVector<double> savedstate;
-    savedstate.SetBounds(1,N);
+    TVector<double> savedStateStart, savedStateHalfWay;
+    savedStateStart.SetBounds(1,N);
+    savedStateHalfWay.SetBounds(1,N);
 
     // Saved each of their neural states 
     for (int i = 1; i <= N; i++)
     {
-        savedstate[i] = Agent.NervousSystem.NeuronState(i);
+        savedStateStart[i] = Agent.NervousSystem.NeuronState(i);
     }
 
     // Phase
@@ -847,7 +848,10 @@ double RecordBehavior4(TSearch &s) {
             LandmarkFile1 << food_loc << " ";
 
             Agent.ResetPosition(0);
-            Agent.ResetNeuralState();
+            for (int i = 1; i <= N; i++)
+            {
+                Agent.NervousSystem.SetNeuronState(i, savedStateStart[i]);
+            }
 
             BehaviorFile1 << Agent.Position() << " ";
 
@@ -859,7 +863,6 @@ double RecordBehavior4(TSearch &s) {
                 Agent.Step(StepSize);
                 BehaviorFile1 << Agent.Position() << " ";
             }
-            Agent.ResetSensors();
 
             // 2. delay
             Agent.ResetPosition(0); 
@@ -877,7 +880,7 @@ double RecordBehavior4(TSearch &s) {
 
             for (int i = 1; i <= N; i++)
             {
-                Agent.NervousSystem.SetNeuronState(i, savedstate[i]);
+                Agent.NervousSystem.SetNeuronState(i, savedStateHalfWay[i]);
             }
 
             // Testing Phase
@@ -901,7 +904,7 @@ double RecordBehavior4(TSearch &s) {
                     Agent.ResetPosition(0);
                     for (int i = 1; i <= N; i++)
                     {
-                        Agent.NervousSystem.SetNeuronState(i, savedstate[i]);
+                        Agent.NervousSystem.SetNeuronState(i, savedStateHalfWay[i]);
                     }
                     totaldist = 0.0;
                     totaltime = 0.0;
