@@ -1156,25 +1156,25 @@ int main (int argc, const char* argv[])
     search.SetEvaluationFunction(FitnessFunction1);
     search.ExecuteSearch();
 
-    // search.SetSearchTerminationFunction(TerminationFunction);
-    // search.SetEvaluationFunction(FitnessFunction2);
-    // search.ExecuteSearch();
-
     if (search.BestPerformance() > 0.99) {
         RecordBehavior1(search);
     }
+    
+    search.SetSearchTerminationFunction(TerminationFunction);
+    search.SetEvaluationFunction(FitnessFunction2);
+    search.ExecuteSearch();
 
-    // search.SetSearchTerminationFunction(TerminationFunction);
-    // search.SetEvaluationFunction(FitnessFunction3);
-    // search.ExecuteSearch();
+    search.SetSearchTerminationFunction(TerminationFunction);
+    search.SetEvaluationFunction(FitnessFunction3);
+    search.ExecuteSearch();
 
-    // search.SetSearchTerminationFunction(TerminationFunction);
-    // search.SetEvaluationFunction(FitnessFunction4);
-    // search.ExecuteSearch();
+    search.SetSearchTerminationFunction(TerminationFunction);
+    search.SetEvaluationFunction(FitnessFunction4);
+    search.ExecuteSearch();
 
-    // if (search.BestPerformance() > 0.99) {
-    //     RecordBehavior4(search);
-    // }
+    if (search.BestPerformance() > 0.99) {
+        RecordBehavior4(search);
+    }
 
     #ifdef PRINTTOFILE
         file.close();
