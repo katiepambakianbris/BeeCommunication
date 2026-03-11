@@ -654,8 +654,8 @@ double RecordBehavior1(TSearch &s) {
 
         // stores the location of the landmarks and the food
         ofstream LandmarkFile1, LandmarkFile2;
-        LandmarkFile1.open(dir + "landmark_location_"+current_run+"_env"+s_env+ "_stage2" + "_phase1.dat");
-        LandmarkFile2.open(dir + "landmark_location_"+current_run+"_env"+s_env+ "_stage2" +"_phase2.dat");
+        LandmarkFile1.open(dir + "landmark_location_"+current_run+"_env"+s_env+ "_stage1" + "_phase1.dat");
+        LandmarkFile2.open(dir + "landmark_location_"+current_run+"_env"+s_env+ "_stage1" +"_phase2.dat");
 
         ofstream FitnessFile;
         FitnessFile.open(dir + "fitness_"+current_run+"_env"+s_env+ "_stage2" + ".dat");
