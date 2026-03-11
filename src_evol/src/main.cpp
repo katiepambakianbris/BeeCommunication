@@ -658,7 +658,7 @@ double RecordBehavior1(TSearch &s) {
         LandmarkFile2.open(dir + "landmark_location_"+current_run+"_env"+s_env+ "_stage1" +"_phase2.dat");
 
         ofstream FitnessFile;
-        FitnessFile.open(dir + "fitness_"+current_run+"_env"+s_env+ "_stage2" + ".dat");
+        FitnessFile.open(dir + "fitness_"+current_run+"_env"+s_env+ "_stage1" + ".dat");
 
         // PHASE 1: Setup
 
@@ -699,6 +699,346 @@ double RecordBehavior1(TSearch &s) {
         for (double ref_var = 0.0; ref_var <= 0.0; ref_var += 1.0) // OFFSET = 15
         {
             for (double sep_var = 0.0; sep_var <= 0.0; sep_var += 1.0) // SEP = 15
+            {
+                // arrange the landmarks in position  
+                for (int i = 1; i <= LN; i += 1)
+                {
+                    landmarkPositionTest[i] = (REF + ref_var) + (i * (SEP + sep_var));
+                }
+                food_loc_mod = landmarkPositionTest[env];
+                // write the landmarks to the output
+                for (int i = 1; i <= LN; i += 1){
+                    LandmarkFile2 << landmarkPositionTest[i] << " ";
+                }
+                LandmarkFile2 << food_loc_mod << " ";
+
+                // setup
+                Agent.ResetSensors();
+                Agent.ResetPosition(0);
+                for (int i = 1; i <= N; i++)
+                {
+                    Agent.NervousSystem.SetNeuronState(i, savedStateHalfWay[i]);
+                }
+                totaldist = 0.0;
+                totaltime = 0.0;
+
+                BehaviorFile2 << Agent.Position() << " ";
+
+                // run the trial
+                for (double time = 0; time < RunDuration; time += StepSize)
+                {
+                    Agent.SenseLandmarks(LN,landmarkPositionTest);
+                    Agent.Step(StepSize);
+                    BehaviorFile2 << Agent.Position() << " ";
+
+                    // Measure distance between them (after transients)
+                    if (time > TransDuration)
+                    {
+                        dist = fabs(Agent.pos - food_loc_mod);
+                        
+                        if (dist < mindist){
+                            dist = 0.0;
+                        }
+
+                        totaldist += dist;
+
+                        totaltime += 1;
+                        FitnessFile << 1 - ((totaldist / totaltime)/MinLength) << " ";
+                    }
+                }
+
+                fit = 1 - ((totaldist / totaltime)/MinLength);
+                if (fit < 0.0){
+                    fit = 0.0;
+                }
+                totalfit += fit;
+
+                totaltrials += 1;
+            
+                BehaviorFile2 << endl;
+                LandmarkFile2 << endl;
+                FitnessFile << endl;
+            }
+        }
+        BehaviorFile1.close();
+        BehaviorFile2.close();
+        LandmarkFile1.close();
+        LandmarkFile2.close();
+        FitnessFile.close();
+    }
+    
+    return (totalfit) / (totaltrials);
+}
+
+double RecordBehavior2(TSearch &s) {
+    std::string current_run = s.CurrentRun();
+    std::string dir = s.Directory();
+    
+    // Map genotype to phenotype
+    TVector<double> genotype;
+    genotype = s.BestIndividual();
+
+    TVector<double> phenotype;
+    phenotype.SetBounds(1, (int)(VectSize));
+    GenPhenMapping(genotype, phenotype, 1);
+
+    CountingAgent Agent( N, phenotype);
+
+    // Bookeeping variables
+    double totaltrials = 0;
+    double totaltime;
+    double dist;
+    double totaldist;
+    double totalfit = 0.0;
+    double food_loc, food_loc_mod;
+    double fit;
+
+    // Landmarks base position and variations
+    TVector<double> landmarkPositions;
+    landmarkPositions.SetBounds(1,LN);  // [30, 45, 60..]
+    for (int i = 1; i <= LN; i += 1){
+        landmarkPositions[i] = REF + (i * SEP);
+    }
+
+    TVector<double> landmarkPositionTest;
+    landmarkPositionTest.SetBounds(1,LN);
+
+    // save the state
+    TVector<double> savedStateStart, savedStateHalfWay;
+    savedStateStart.SetBounds(1,N);
+    savedStateHalfWay.SetBounds(1,N);
+
+    // Saved each of their neural states 
+    for (int i = 1; i <= N; i++)
+    {
+        savedStateStart[i] = Agent.NervousSystem.NeuronState(i);
+    }
+
+    // Phase
+    for (int env = 1; env <= LN; env += 1){
+        std::string s_env = std::to_string(env);
+        ofstream BehaviorFile1;
+        BehaviorFile1.open( dir + "behavior_" + current_run + "_Env" + s_env + "_stage2" + "_Phase1.dat");
+        ofstream BehaviorFile2;
+        BehaviorFile2.open( dir + "behavior_" + current_run + "_Env" + s_env + "_stage2" + "_Phase2.dat");
+
+        // stores the location of the landmarks and the food
+        ofstream LandmarkFile1, LandmarkFile2;
+        LandmarkFile1.open(dir + "landmark_location_"+current_run+"_env"+s_env+ "_stage2" + "_phase1.dat");
+        LandmarkFile2.open(dir + "landmark_location_"+current_run+"_env"+s_env+ "_stage2" +"_phase2.dat");
+
+        ofstream FitnessFile;
+        FitnessFile.open(dir + "fitness_"+current_run+"_env"+s_env+ "_stage2" + ".dat");
+
+        // PHASE 1: Setup
+
+        // Establish landmark and food location
+        food_loc = landmarkPositions[env];
+        for (int i = 1; i <= LN; i += 1){
+            LandmarkFile1 << landmarkPositions[i] << " ";
+        }
+        LandmarkFile1 << food_loc << " ";
+
+        //  setup the agents position + state
+        Agent.ResetPosition(0);
+        Agent.ResetSensors();
+        for (int i = 1; i <= N; i++)
+        {
+            Agent.NervousSystem.SetNeuronState(i, savedStateStart[i]);
+        }
+
+
+        BehaviorFile1 << Agent.Position() << " ";
+
+        // Step 2: Training Phase
+        for (double time = 0; time < RunDuration; time += StepSize)
+        {
+            Agent.SenseFood(food_loc);
+            Agent.SenseLandmarks(LN,landmarkPositions);
+            Agent.Step(StepSize);
+            BehaviorFile1 << Agent.Position() << " ";
+        }
+
+        // Saved each of their neural states 
+        for (int i = 1; i <= N; i++)
+        {
+            savedStateHalfWay[i] = Agent.NervousSystem.NeuronState(i);
+        }
+    
+        // Testing Phase
+        for (double ref_var = -1.0; ref_var <= 1.0; ref_var += 1.0)
+        {
+            for (double sep_var = -1.0; sep_var <= 1.0; sep_var += 1.0)
+            {
+                // arrange the landmarks in position  
+                for (int i = 1; i <= LN; i += 1)
+                {
+                    landmarkPositionTest[i] = (REF + ref_var) + (i * (SEP + sep_var));
+                }
+                food_loc_mod = landmarkPositionTest[env];
+                // write the landmarks to the output
+                for (int i = 1; i <= LN; i += 1){
+                    LandmarkFile2 << landmarkPositionTest[i] << " ";
+                }
+                LandmarkFile2 << food_loc_mod << " ";
+
+                // setup
+                Agent.ResetSensors();
+                Agent.ResetPosition(0);
+                for (int i = 1; i <= N; i++)
+                {
+                    Agent.NervousSystem.SetNeuronState(i, savedStateHalfWay[i]);
+                }
+                totaldist = 0.0;
+                totaltime = 0.0;
+
+                BehaviorFile2 << Agent.Position() << " ";
+
+                // run the trial
+                for (double time = 0; time < RunDuration; time += StepSize)
+                {
+                    Agent.SenseLandmarks(LN,landmarkPositionTest);
+                    Agent.Step(StepSize);
+                    BehaviorFile2 << Agent.Position() << " ";
+
+                    // Measure distance between them (after transients)
+                    if (time > TransDuration)
+                    {
+                        dist = fabs(Agent.pos - food_loc_mod);
+                        
+                        if (dist < mindist){
+                            dist = 0.0;
+                        }
+
+                        totaldist += dist;
+
+                        totaltime += 1;
+                        FitnessFile << 1 - ((totaldist / totaltime)/MinLength) << " ";
+                    }
+                }
+
+                fit = 1 - ((totaldist / totaltime)/MinLength);
+                if (fit < 0.0){
+                    fit = 0.0;
+                }
+                totalfit += fit;
+
+                totaltrials += 1;
+            
+                BehaviorFile2 << endl;
+                LandmarkFile2 << endl;
+                FitnessFile << endl;
+            }
+        }
+        BehaviorFile1.close();
+        BehaviorFile2.close();
+        LandmarkFile1.close();
+        LandmarkFile2.close();
+        FitnessFile.close();
+    }
+    
+    return (totalfit) / (totaltrials);
+}
+
+double RecordBehavior3(TSearch &s) {
+    std::string current_run = s.CurrentRun();
+    std::string dir = s.Directory();
+    
+    // Map genotype to phenotype
+    TVector<double> genotype;
+    genotype = s.BestIndividual();
+
+    TVector<double> phenotype;
+    phenotype.SetBounds(1, (int)(VectSize));
+    GenPhenMapping(genotype, phenotype, 1);
+
+    CountingAgent Agent( N, phenotype);
+
+    // Bookeeping variables
+    double totaltrials = 0;
+    double totaltime;
+    double dist;
+    double totaldist;
+    double totalfit = 0.0;
+    double food_loc, food_loc_mod;
+    double fit;
+
+    // Landmarks base position and variations
+    TVector<double> landmarkPositions;
+    landmarkPositions.SetBounds(1,LN);  // [30, 45, 60..]
+    for (int i = 1; i <= LN; i += 1){
+        landmarkPositions[i] = REF + (i * SEP);
+    }
+
+    TVector<double> landmarkPositionTest;
+    landmarkPositionTest.SetBounds(1,LN);
+
+    // save the state
+    TVector<double> savedStateStart, savedStateHalfWay;
+    savedStateStart.SetBounds(1,N);
+    savedStateHalfWay.SetBounds(1,N);
+
+    // Saved each of their neural states 
+    for (int i = 1; i <= N; i++)
+    {
+        savedStateStart[i] = Agent.NervousSystem.NeuronState(i);
+    }
+
+    // Phase
+    for (int env = 1; env <= LN; env += 1){
+        std::string s_env = std::to_string(env);
+        ofstream BehaviorFile1;
+        BehaviorFile1.open( dir + "behavior_" + current_run + "_Env" + s_env + "_stage3" + "_Phase1.dat");
+        ofstream BehaviorFile2;
+        BehaviorFile2.open( dir + "behavior_" + current_run + "_Env" + s_env + "_stage3" + "_Phase2.dat");
+
+        // stores the location of the landmarks and the food
+        ofstream LandmarkFile1, LandmarkFile2;
+        LandmarkFile1.open(dir + "landmark_location_"+current_run+"_env"+s_env+ "_stage3" + "_phase1.dat");
+        LandmarkFile2.open(dir + "landmark_location_"+current_run+"_env"+s_env+ "_stage3" +"_phase2.dat");
+
+        ofstream FitnessFile;
+        FitnessFile.open(dir + "fitness_"+current_run+"_env"+s_env+ "_stage3" + ".dat");
+
+        // PHASE 1: Setup
+
+        // Establish landmark and food location
+        food_loc = landmarkPositions[env];
+        for (int i = 1; i <= LN; i += 1){
+            LandmarkFile1 << landmarkPositions[i] << " ";
+        }
+        LandmarkFile1 << food_loc << " ";
+
+        //  setup the agents position + state
+        Agent.ResetPosition(0);
+        Agent.ResetSensors();
+        for (int i = 1; i <= N; i++)
+        {
+            Agent.NervousSystem.SetNeuronState(i, savedStateStart[i]);
+        }
+
+
+        BehaviorFile1 << Agent.Position() << " ";
+
+        // Step 2: Training Phase
+        for (double time = 0; time < RunDuration; time += StepSize)
+        {
+            Agent.SenseFood(food_loc);
+            Agent.SenseLandmarks(LN,landmarkPositions);
+            Agent.Step(StepSize);
+            BehaviorFile1 << Agent.Position() << " ";
+        }
+
+        // Saved each of their neural states 
+        for (int i = 1; i <= N; i++)
+        {
+            savedStateHalfWay[i] = Agent.NervousSystem.NeuronState(i);
+        }
+    
+        // Testing Phase
+        for (double ref_var = -2.0; ref_var <= 2.0; ref_var += 2.0)
+        {
+            for (double sep_var = -2.0; sep_var <= 2.0; sep_var += 2.0)
             {
                 // arrange the landmarks in position  
                 for (int i = 1; i <= LN; i += 1)
@@ -1169,9 +1509,16 @@ int main (int argc, const char* argv[])
     search.SetEvaluationFunction(FitnessFunction2);
     search.ExecuteSearch();
 
+    if (search.BestPerformance() > 0.99) {
+        RecordBehavior2(search);
+    }
+
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(FitnessFunction3);
     search.ExecuteSearch();
+        if (search.BestPerformance() > 0.99) {
+        RecordBehavior3(search);
+    }
 
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(FitnessFunction4);
