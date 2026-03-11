@@ -839,7 +839,8 @@ double RecordBehavior4(TSearch &s) {
             FitnessFile1.open(dir + "fitness_"+current_run+"_env"+s_env+"_delay" + s_delay + "_stage4" + "_phase1.dat");
 
 
-            // PHASE 1: Setup
+            // PHASE 1 : training
+
             // Establish food location
             food_loc = landmarkPositions[env];
             // write the landmarks to the output
@@ -856,7 +857,7 @@ double RecordBehavior4(TSearch &s) {
 
             BehaviorFile1 << Agent.Position() << " ";
 
-            // Step 2: Training Phase
+            // Training loop
             for (double time = 0; time < RunDuration; time += StepSize)
             {
                 Agent.SenseFood(food_loc);
@@ -866,6 +867,7 @@ double RecordBehavior4(TSearch &s) {
             }
 
             // 2. delay
+            // setup 
             Agent.ResetPosition(0); 
             Agent.ResetSensors();
             for (int i = 1; i <= LN; i += 1){
@@ -873,15 +875,17 @@ double RecordBehavior4(TSearch &s) {
             }
             LandmarkFile2 << food_loc << " ";
 
+            // Delay loop
             for (double time=0; time < delay; time += StepSize){
                 // not sure if it should step or not
                 Agent.Step(StepSize);
                 BehaviorFile2 << Agent.Position() << " ";
             }
 
+            // After the dealy - Saved each of their neural states 
             for (int i = 1; i <= N; i++)
             {
-                Agent.NervousSystem.SetNeuronState(i, savedStateHalfWay[i]);
+                savedStateStart[i] = Agent.NervousSystem.NeuronState(i);
             }
 
             // Testing Phase
