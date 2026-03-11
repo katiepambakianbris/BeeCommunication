@@ -817,7 +817,7 @@ double RecordBehavior4(TSearch &s) {
 
     // Phase
     for (int env = 1; env <= LN; env += 1){
-        for (int delay=0; delay<=0; delay +=5){ 
+        for (int delay=0; delay<=10; delay +=5){ 
 
             std::string s_env = std::to_string(env);
             std::string s_delay = std::to_string(delay);
@@ -875,6 +875,7 @@ double RecordBehavior4(TSearch &s) {
             }
             LandmarkFile2 << food_loc << " ";
 
+            BehaviorFile2 << Agent.Position() << " ";
             // Delay loop
             for (double time=0; time < delay; time += StepSize){
                 // not sure if it should step or not
@@ -1090,7 +1091,7 @@ int main (int argc, const char* argv[])
     // Setup
     // ######################
     // check that argv[1] has been provided
-    if (argc < 3){
+    if (argc < 4){
         // send an error message to the terminal
         std::cerr << "Error: missing run or array index number.\n";
         return 1;
