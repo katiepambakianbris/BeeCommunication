@@ -1248,6 +1248,7 @@ double RecordBehavior4(TSearch &s) {
 
                     // setup
                     Agent.ResetPosition(0);
+                    Agent.ResetSensors();
                     for (int i = 1; i <= N; i++)
                     {
                         Agent.NervousSystem.SetNeuronState(i, delayedState[i]);
