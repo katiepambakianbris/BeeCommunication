@@ -1240,6 +1240,7 @@ double RecordBehavior4(TSearch &s) {
                         landmarkPositionTest[i] = (REF + ref_var) + (i * (SEP + sep_var));
                     }
                     food_loc_mod = landmarkPositionTest[env];
+                    
                     // write the landmarks to the output
                     for (int i = 1; i <= LN; i += 1){
                         LandmarkFile3 << landmarkPositionTest[i] << " ";
