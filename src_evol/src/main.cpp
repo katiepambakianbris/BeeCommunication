@@ -34,6 +34,9 @@ const double TMAX = 16.0;
 
 // Genotype size
 int VectSize = 2 * (N*N + 5*N);  // Double the amount of parameters, one for Receiver, one for Signaler
+double REF = 15;
+double SEP = 15;
+
 
 // Environment variables
 // Signaller Start Zone
@@ -51,6 +54,7 @@ const double TransDuration = 150.0;
 const double HarshDuration = 30.0;
 // this was originally 50 -> length of the arena
 const double ArenaLength = LANDMARKZONEEND - SIGNALLERSTART;      
+const double MinLength = 50;
 const double mindist = 3.0;     
 
 // ------------------------------------
@@ -139,14 +143,140 @@ TVector<double> genLandmarks_LeapFrog(RandomState &rs, TVector<double> &landmark
 // of the landmarks the receiver should go to
 // ---------------------------------------------------------
 
+
+// ************************
+// No change
+// ************************
+double FitnessFunction1(TVector<double> &genotype, RandomState &rs)
+{
+    // Map genotype to phenotype
+    TVector<double> phenotypeS;
+    phenotypeS.SetBounds(1, (int)(VectSize/2));
+    GenPhenMapping(genotype, phenotypeS, 1);
+
+    // construct the signaller agent
+    CountingAgent Agent(N, phenotypeS);
+
+    // Save state
+    // Use this to save the neural state during learning
+    TVector<double> saved_state;
+    saved_state.SetBounds(1,N);
+
+    // Keep track of performance (fitness across landmarks/env)
+    double totaltrials = 0;
+    double totaltime;
+    double dist;
+    double totaldist;
+    double totalfit = 0.0;
+    double food_loc, food_loc_mod;
+    double fit;
+
+    // ************************
+    // Set up Landmarks
+    // ************************
+
+    TVector<double> landmarkPositions;
+    landmarkPositions.SetBounds(1,LN);  // [30, 45, 60..]
+    for (int i = 1; i <= LN; i += 1)
+    {
+        landmarkPositions[i] = REF + (i * SEP);
+    }
+
+    TVector<double> landmarkPositionTest;
+    landmarkPositionTest.SetBounds(1,LN);  
+
+    double input[3] = {0.5,1.0,1.5};
+
+    // loop through different enviornment 
+    // for each enviornment i, landmark i has the food 
+    for (int env = 1; env <= LN; env += 1)
+    {
+        // Step 1: Setup
+        // Establish food location
+        food_loc = landmarkPositions[env];
+    
+        // reset position + neural state of the signaller
+        Agent.ResetPosition(0); 
+        Agent.ResetNeuralState();
+
+        // Step 2: Training Phase
+        for (double time = 0; time < RunDuration; time += StepSize)
+        {
+            Agent.SenseFood(input[env-1]);
+            Agent.SenseLandmarks(LN,landmarkPositions);
+            Agent.Step(StepSize);
+        }
+
+        // Saved each of their neural states 
+        for (int i = 1; i <= N; i++)
+        {
+            saved_state[i] = Agent.NervousSystem.NeuronState(i);
+        }
+    
+        // 2. Testing Phase
+        for (double ref_var = 0.0; ref_var <= 0.0; ref_var += 1.0) // OFFSET = 15
+        {
+            for (double sep_var = 0.0; sep_var <= 0.0; sep_var += 1.0) // SEP = 15
+            {
+                // arrange the landmarks in position  
+                for (int i = 1; i <= LN; i += 1)
+                {
+                    landmarkPositionTest[i] = (REF + ref_var) + (i * (SEP + sep_var));
+                }
+                food_loc_mod = landmarkPositionTest[env];
+
+                // Setup
+                Agent.ResetPosition(0);
+                Agent.ResetSensors();
+                for (int i = 1; i <= N; i++)
+                {
+                    Agent.NervousSystem.SetNeuronState(i, saved_state[i]);
+                }
+                totaldist = 0.0;
+                totaltime = 0.0;
+        
+                // run the trial
+                for (double time = 0; time < RunDuration; time += StepSize)
+                {
+                    Agent.SenseLandmarks(LN,landmarkPositionTest);
+                    Agent.Step(StepSize);
+
+                    // Measure distance between them (after transients)
+                    if (time > TransDuration)
+                    {
+                        dist = fabs(Agent.pos - food_loc_mod);
+                        
+                        if (dist < mindist){
+                            dist = 0.0;
+                        }
+                        totaldist += dist;
+
+                        totaltime += 1;
+                    }
+                }
+
+                fit = 1 - ((totaldist / totaltime)/MinLength);
+                if (fit < 0.0){
+                    fit = 0.0;
+                }
+                totalfit += fit;
+                totaltrials += 1;
+            }
+        }
+    }
+    return totalfit / totaltrials;
+}
+
 double stage1(TVector<double> &genotype, RandomState &rs){
-    // initalise their genotypes 
+    // initalise their genotypes -? they start with the same one come in from the previous task
     TVector<double> phenotypeReceiver, phenotypeSignaller;
     phenotypeSignaller.SetBounds(1, (int)(VectSize/2));
-    GenPhenMapping(genotype, phenotypeSignaller, 1);
-    CountingAgent AgentSignaller(N, phenotypeSignaller);
     phenotypeReceiver.SetBounds(1, (int)(VectSize/2));
-    GenPhenMapping(genotype, phenotypeReceiver, (int)(N*N + 5*N +1));
+
+    GenPhenMapping(genotype, phenotypeSignaller, 1);
+    GenPhenMapping(genotype, phenotypeReceiver, (int)1);
+
+    CountingAgent AgentSignaller(N, phenotypeSignaller);
     CountingAgent AgentReceiver(N, phenotypeReceiver);
 
     // save the state of the signaller and receiver
