@@ -1359,21 +1359,21 @@ double RecordBehaviorTest(TSearch &s) {
             std::string s_env = std::to_string(env);
             std::string s_delay = std::to_string(delay);
             ofstream BehaviorFile1;
-            BehaviorFile1.open( dir + "behavior_" + current_run + "_Env" + s_env + "_delay" + s_delay + "_stage4" + "_Phase1.dat");
+            BehaviorFile1.open( dir + "behavior_" + current_run + "_Env" + s_env + "_delay" + s_delay + "_test" + "_Phase1.dat");
             ofstream BehaviorFile2;
-            BehaviorFile2.open( dir + "behavior_" + current_run + "_Env" + s_env + "_delay" + s_delay + "_stage4" + "_Phase2.dat");
+            BehaviorFile2.open( dir + "behavior_" + current_run + "_Env" + s_env + "_delay" + s_delay + "_test" + "_Phase2.dat");
             ofstream BehaviorFile3;
-            BehaviorFile3.open( dir + "behavior_" + current_run + "_Env" + s_env + "_delay" + s_delay + "_stage4" + "_Phase3.dat");
+            BehaviorFile3.open( dir + "behavior_" + current_run + "_Env" + s_env + "_delay" + s_delay + "_test" + "_Phase3.dat");
 
             // stores the location of the landmarks and the food
             ofstream LandmarkFile1, LandmarkFile2, LandmarkFile3;
-            LandmarkFile1.open(dir + "landmark_location_"+current_run+"_env"+s_env+"_delay" + s_delay + "_stage4" + "_phase1.dat");
-            LandmarkFile2.open(dir + "landmark_location_"+current_run+"_env"+s_env+"_delay" + s_delay + "_stage4" + "_phase2.dat");
-            LandmarkFile3.open(dir + "landmark_location_"+current_run+"_env"+s_env+"_delay" + s_delay + "_stage4"+ "_phase3.dat");
+            LandmarkFile1.open(dir + "landmark_location_"+current_run+"_env"+s_env+"_delay" + s_delay + "_test" + "_phase1.dat");
+            LandmarkFile2.open(dir + "landmark_location_"+current_run+"_env"+s_env+"_delay" + s_delay + "_test" + "_phase2.dat");
+            LandmarkFile3.open(dir + "landmark_location_"+current_run+"_env"+s_env+"_delay" + s_delay + "_test"+ "_phase3.dat");
 
 
             ofstream FitnessFile1;
-            FitnessFile1.open(dir + "fitness_"+current_run+"_env"+s_env+"_delay" + s_delay + "_stage4" + "_phase1.dat");
+            FitnessFile1.open(dir + "fitness_"+current_run+"_env"+s_env+"_delay" + s_delay + "_test" + "_phase1.dat");
 
 
             // PHASE 1 : training
