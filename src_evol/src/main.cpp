@@ -163,7 +163,7 @@ double stage1(TVector<double> &genotype, RandomState &rs){
     double total_fitness =0;
     double distance_food_receiver;
 
-    for (int i=0; i<1; i++){
+    for (int i=0; i<3; i++){
         genLandmarks_LeapFrog(rs, landmarkPositions);
         // set each of the landmarks to be the location of the food
         for (int env =1; env<=LN;env++){
@@ -179,7 +179,7 @@ double stage1(TVector<double> &genotype, RandomState &rs){
             AgentReceiver.ResetSensors();
 
             // Initialise the agent for this trial
-            int location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
+            double location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
             AgentSignaller.SetPosition(location);
             AgentSignaller.ResetNeuralState();
             AgentSignaller.ResetSensors();
@@ -225,6 +225,7 @@ double stage1(TVector<double> &genotype, RandomState &rs){
 
             for (double time=0; time < RunDuration; time += StepSize){
                 AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+                AgentReceiver.SenseOther(AgentSignaller.GetPosition());
                 AgentReceiver.Step(StepSize);
 
                 if (time > TransDuration){
@@ -339,7 +340,7 @@ double RecordBehavior(TSearch &s, RandomState &rs){
             AgentReceiver.ResetSensors();
 
             // Initialise the agent for this trial
-            int location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
+            double location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
             AgentSignaller.SetPosition(location);
             AgentSignaller.ResetSensors();
 
@@ -440,6 +441,7 @@ double RecordBehavior(TSearch &s, RandomState &rs){
 
             for (double time=0; time < RunDuration; time += StepSize){
                 AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+                AgentReceiver.SenseOther(AgentSignaller.GetPosition());
                 AgentReceiver.Step(StepSize);
 
                 SignallerBehaviorFile << AgentSignaller.GetPosition() << " ";
