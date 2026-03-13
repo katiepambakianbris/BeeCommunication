@@ -163,7 +163,10 @@ double stage1(TVector<double> &genotype, RandomState &rs){
     double total_fitness =0;
     double distance_food_receiver;
 
-    for (int i=0; i<1; i++){
+    double input[3] = {0.5,1.0,1.5};
+
+
+    for (int i=0; i<3; i++){
         genLandmarks_LeapFrog(rs, landmarkPositions);
         // set each of the landmarks to be the location of the food
         for (int env =1; env<=LN;env++){
@@ -179,7 +182,7 @@ double stage1(TVector<double> &genotype, RandomState &rs){
             AgentReceiver.ResetSensors();
 
             // Initialise the agent for this trial
-            int location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
+            double location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
             AgentSignaller.SetPosition(location);
             AgentSignaller.ResetNeuralState();
             AgentSignaller.ResetSensors();
@@ -188,7 +191,7 @@ double stage1(TVector<double> &genotype, RandomState &rs){
 
             for (double time=0; time < RunDuration; time += StepSize){
                 // only let the Signaller move
-                AgentSignaller.SenseFood(food_location);
+                AgentSignaller.SenseFood(input[env-1]);
                 AgentSignaller.SenseLandmarks(LN, landmarkPositions);
                 AgentSignaller.SenseOther(AgentReceiver.GetPosition());
                 AgentSignaller.Step(StepSize);
@@ -225,6 +228,7 @@ double stage1(TVector<double> &genotype, RandomState &rs){
 
             for (double time=0; time < RunDuration; time += StepSize){
                 AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+                AgentReceiver.SenseOther(AgentSignaller.GetPosition());
                 AgentReceiver.Step(StepSize);
 
                 if (time > TransDuration){
@@ -322,6 +326,8 @@ double RecordBehavior(TSearch &s, RandomState &rs){
     // **** Generate landmarks (using leapfrog method) ****
     TVector<double> landmarkPositions;
 
+    double input[3] = {0.5,1.0,1.5};
+
     // calculating what the set other should be (value between 0.5 and 1.5)
     for (int i=0; i<3; i++){
         genLandmarks_LeapFrog(rs, landmarkPositions);
@@ -339,7 +345,7 @@ double RecordBehavior(TSearch &s, RandomState &rs){
             AgentReceiver.ResetSensors();
 
             // Initialise the agent for this trial
-            int location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
+            double location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
             AgentSignaller.SetPosition(location);
             AgentSignaller.ResetSensors();
 
@@ -370,7 +376,7 @@ double RecordBehavior(TSearch &s, RandomState &rs){
 
             for (double time=0; time < RunDuration; time += StepSize){
                 // only let the Signaller move
-                AgentSignaller.SenseFood(food_location);
+                AgentSignaller.SenseFood(input[env-1]);
                 AgentSignaller.SenseLandmarks(LN, landmarkPositions);
                 AgentSignaller.SenseOther(AgentReceiver.GetPosition());
                 AgentSignaller.Step(StepSize);
@@ -440,6 +446,7 @@ double RecordBehavior(TSearch &s, RandomState &rs){
 
             for (double time=0; time < RunDuration; time += StepSize){
                 AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+                AgentReceiver.SenseOther(AgentSignaller.GetPosition());
                 AgentReceiver.Step(StepSize);
 
                 SignallerBehaviorFile << AgentSignaller.GetPosition() << " ";
