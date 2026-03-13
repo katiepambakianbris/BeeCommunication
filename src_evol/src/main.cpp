@@ -221,6 +221,13 @@ double stage1(TVector<double> &genotype, RandomState &rs){
                 AgentReceiver.Step(StepSize);
                 AgentSignaller.Step(StepSize);
 
+                // clam the signallers position
+                double pos = AgentSignaller.getPosition();
+                
+                if (pos > LANDMARKZONESTART){
+                    AgentSignaller.SetPosition(LANDMARKZONESTART);
+                }
+
                 if (time > TransDuration*2){
                     distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
 
@@ -389,7 +396,7 @@ double RecordBehavior(TSearch &s, RandomState &rs){
             AgentReceiver.ResetSensors();
             AgentSignaller.ResetSensors();
 
-            // ********* PHASE 2 ************
+            // ********* PHASE 2/3 ************
 
             // record the initial position
             SignallerBehaviorFile << AgentSignaller.GetPosition() << " ";
@@ -417,6 +424,14 @@ double RecordBehavior(TSearch &s, RandomState &rs){
                 // Move both the agents
                 AgentReceiver.Step(StepSize);
                 AgentSignaller.Step(StepSize);
+
+                // clam the signallers position
+                double pos = AgentSignaller.getPosition();
+                
+                if (pos > LANDMARKZONESTART){
+                    AgentSignaller.SetPosition(LANDMARKZONESTART);
+                }
+                
 
                 if (time > TransDuration*2){
                     distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
