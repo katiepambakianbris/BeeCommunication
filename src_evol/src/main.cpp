@@ -853,11 +853,15 @@ int main (int argc, const char* argv[])
     
     /* Evolve */
 
+    // Counting task
+    search.SetSearchTerminationFunction(TerminationFunction);
+    search.SetEvaluationFunction(FitnessFunction1);
+    search.ExecuteSearch();
+
     // Stage 1: Evolution of Reciver
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(stage1);
     search.ExecuteSearch();
-
 
     if (search.BestPerformance() > 0.99) {
         RecordBehavior(search, search.getRandomState());
