@@ -203,35 +203,25 @@ double stage1(TVector<double> &genotype, RandomState &rs){
             AgentReceiver.ResetSensors();
             AgentSignaller.ResetSensors();
 
-            // Phase 2 (Training Phase) -> signaller and receiver wondering together
+            // Phase 2/3 (Training + scoring Phase)
+
+            double scoringTime = 0.0;
+            double totalScore = 0.0;
             
-            for (double time=0; time < RunDuration; time += StepSize){
+            for (double time=0; time < RunDuration*2; time += StepSize){
                 // Receiver and Signaller only see each other 
                 AgentReceiver.SenseOther(AgentSignaller.GetPosition());
                 AgentSignaller.SenseOther(AgentReceiver.GetPosition());
 
+                AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+
+                AgentSignaller.SenseFood(input[env-1]);
+
                 // Move both the agents
                 AgentReceiver.Step(StepSize);
                 AgentSignaller.Step(StepSize);
-            }
 
-            // Reset
-            AgentReceiver.SetPosition(0);
-            AgentSignaller.SetPosition(location);
-            AgentReceiver.ResetSensors();
-            AgentSignaller.ResetSensors();
-
-            // Phase 3 (Scoring Phase) -> receiver needs to go find the food
-
-            double scoringTime = 0.0;
-            double totalScore = 0.0;
-
-            for (double time=0; time < RunDuration; time += StepSize){
-                AgentReceiver.SenseLandmarks(LN, landmarkPositions);
-                AgentReceiver.SenseOther(AgentSignaller.GetPosition());
-                AgentReceiver.Step(StepSize);
-
-                if (time > TransDuration){
+                if (time > TransDuration*2){
                     distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
 
                     // if the distance is within a threshold set the score to be perfect
@@ -335,8 +325,8 @@ double RecordBehavior(TSearch &s, RandomState &rs){
         for (int env =1; env<=LN;env++){
             // set the food to be at the ith landmark location
             food_location = landmarkPositions[env];
-            for (int i = 1; i <= LN; i += 1){
-                LandmarkFile << landmarkPositions[i] << " ";
+            for (int x = 1; x<= LN; x += 1){
+                LandmarkFile << landmarkPositions[x] << " ";
             }
             LandmarkFile << food_location << " ";
             
@@ -350,14 +340,14 @@ double RecordBehavior(TSearch &s, RandomState &rs){
             AgentSignaller.ResetSensors();
 
             // Reset neural state
-            for (int i = 1; i <= N; i++)
+            for (int x = 1; x <= N; x++)
             {
-                AgentSignaller.NervousSystem.SetNeuronState(i, savedStateSignaller[i]);
+                AgentSignaller.NervousSystem.SetNeuronState(x, savedStateSignaller[x]);
             
             }
-            for (int i = 1; i <= N; i++)
+            for (int x = 1; x <= N; x++)
             {
-                AgentReceiver.NervousSystem.SetNeuronState(i, savedStateReceiver[i]);
+                AgentReceiver.NervousSystem.SetNeuronState(x, savedStateReceiver[x]);
             
             }
             // ********* PHASE 1 ************
@@ -412,47 +402,23 @@ double RecordBehavior(TSearch &s, RandomState &rs){
             NeuronR2 << AgentReceiver.NervousSystem.NeuronState(2) << " ";
             NeuronR3 << AgentReceiver.NervousSystem.NeuronState(3) << " ";
 
-            for (double time=0; time < RunDuration; time += StepSize){
+            double scoringTime = 0.0;
+            double totalScore = 0.0;
+
+            for (double time=0; time < RunDuration*2; time += StepSize){
                 
                 AgentReceiver.SenseOther(AgentSignaller.GetPosition());
                 AgentSignaller.SenseOther(AgentReceiver.GetPosition());
+
+                AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+
+                AgentSignaller.SenseFood(input[env-1]);
 
                 // Move both the agents
                 AgentReceiver.Step(StepSize);
                 AgentSignaller.Step(StepSize);
 
-                SignallerBehaviorFile << AgentSignaller.GetPosition() << " ";
-                RecieverBehaviorFile << AgentReceiver.GetPosition() << " ";
-                
-                // record the neural state at the end of each time step 
-                NeuronS1 << AgentSignaller.NervousSystem.NeuronState(1) << " ";
-                NeuronS2 << AgentSignaller.NervousSystem.NeuronState(2) << " ";
-                NeuronS3 << AgentSignaller.NervousSystem.NeuronState(3) << " ";
-                NeuronR1 << AgentReceiver.NervousSystem.NeuronState(1) << " ";
-                NeuronR2 << AgentReceiver.NervousSystem.NeuronState(2) << " ";
-                NeuronR3 << AgentReceiver.NervousSystem.NeuronState(3) << " ";
-            }
-
-            // Reset
-            AgentReceiver.SetPosition(0);
-            AgentSignaller.SetPosition(location);
-            AgentReceiver.ResetSensors();
-            AgentSignaller.ResetSensors();
-
-            // ********* PHASE 3 ************
-
-            double scoringTime = 0.0;
-            double totalScore = 0.0;
-
-            for (double time=0; time < RunDuration; time += StepSize){
-                AgentReceiver.SenseLandmarks(LN, landmarkPositions);
-                AgentReceiver.SenseOther(AgentSignaller.GetPosition());
-                AgentReceiver.Step(StepSize);
-
-                SignallerBehaviorFile << AgentSignaller.GetPosition() << " ";
-                RecieverBehaviorFile << AgentReceiver.GetPosition() << " ";
-
-                if (time > TransDuration){
+                if (time > TransDuration*2){
                     distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
 
                     // if the distance is within a threshold set the score to be perfect
@@ -468,6 +434,9 @@ double RecordBehavior(TSearch &s, RandomState &rs){
                         Stage3Fitness << 1 - ((totalScore/scoringTime)/ArenaLength) << " ";
                     }
                 }
+
+                SignallerBehaviorFile << AgentSignaller.GetPosition() << " ";
+                RecieverBehaviorFile << AgentReceiver.GetPosition() << " ";
                 
                 // record the neural state at the end of each time step 
                 NeuronS1 << AgentSignaller.NervousSystem.NeuronState(1) << " ";
