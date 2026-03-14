@@ -219,7 +219,7 @@ double stage1(TVector<double> &genotype, RandomState &rs){
 
                 AgentReceiver.SenseLandmarks(LN, landmarkPositions);
 
-                AgentSignaller.SenseTarget(input[env-1]);
+                // AgentSignaller.SenseTarget(input[env-1]);
 
                 // Move both the agents
                 AgentReceiver.Step(StepSize);
@@ -422,7 +422,7 @@ double RecordBehavior(TSearch &s, RandomState &rs){
 
                 AgentReceiver.SenseLandmarks(LN, landmarkPositions);
 
-                AgentSignaller.SenseTarget(input[env-1]);
+                // AgentSignaller.SenseTarget(input[env-1]);
 
                 // Move both the agents
                 AgentReceiver.Step(StepSize);
