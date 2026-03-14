@@ -1162,7 +1162,6 @@ double RecordBehavior4(TSearch &s) {
             std::string s_env = std::to_string(env);
             ofstream BehaviorFile1, BehaviorFile2;
             BehaviorFile1.open( dir + "behavior_" + current_run + "_Env" + s_env  + "_stage4" + "_Phase1.dat");
-            ofstream BehaviorFile2;
             BehaviorFile2.open( dir + "behavior_" + current_run + "_Env" + s_env + "_stage4" + "_Phase2.dat");
         
             // stores the location of the landmarks and the food
