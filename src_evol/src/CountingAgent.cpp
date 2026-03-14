@@ -14,8 +14,8 @@ void CountingAgent::Set(int networksize, TVector<double> parameters)
 {
 	size = networksize;
 	gain = 1.0; 
-	foodsensorweights.SetBounds(1, size);
-	foodsensorweights.FillContents(0.0);
+	// foodsensorweights.SetBounds(1, size);
+	// foodsensorweights.FillContents(0.0);
 	landmarksensorweights.SetBounds(1, size);
 	landmarksensorweights.FillContents(0.0);
 	othersensorweights.SetBounds(1, size);
@@ -45,11 +45,11 @@ void CountingAgent::Set(int networksize, TVector<double> parameters)
 			k++;
 		}
 	}
-	// Food Sensor Weights
-	for (int i = 1; i <= size; i++) {
-		SetFoodSensorWeight(i,parameters(k));
-		k++;
-	}
+	// // Food Sensor Weights
+	// for (int i = 1; i <= size; i++) {
+	// 	SetFoodSensorWeight(i,parameters(k));
+	// 	k++;
+	// }
 	// Landmark Sensor Weights
 	for (int i = 1; i <= size; i++) {
 		SetLandmarkSensorWeight(i,parameters(k));
@@ -75,7 +75,7 @@ void CountingAgent::ResetNeuralState()
 {
 	NervousSystem.RandomizeCircuitState(0.0,0.0);
 	landmarkSensor = 0.0;
-	foodSensor = 0.0;
+	// foodSensor = 0.0;
 	otherSensor = 0.0;
 }
 
@@ -93,15 +93,15 @@ void CountingAgent::SenseLandmarks(double ln, TVector<double> pos_landmarks)
 }
 
 // Sense 
-void CountingAgent::SenseFood(double pos_food)
-{
-	double dist;
-	dist = fabs(pos_food - pos);
-	if (dist < 5)
-	{
-		foodSensor = 1/(1 + exp(8 * (dist - 1)));		
-	}
-}
+// void CountingAgent::SenseFood(double pos_food)
+// {
+// 	double dist;
+// 	dist = fabs(pos_food - pos);
+// 	if (dist < 5)
+// 	{
+// 		foodSensor = 1/(1 + exp(8 * (dist - 1)));		
+// 	}
+// }
 
 // Sense 
 void CountingAgent::SenseOther(double pos_other)
@@ -119,8 +119,11 @@ void CountingAgent::Step(double StepSize)
 {
 	// Set sensors to external input
 	for (int i = 1; i <= size; i++){
-		NervousSystem.SetNeuronExternalInput(i, foodSensor*foodsensorweights[i] + landmarkSensor*landmarksensorweights[i] + otherSensor*othersensorweights[i]);
+		NervousSystem.SetNeuronExternalInput(i, landmarkSensor*landmarksensorweights[i] + otherSensor*othersensorweights[i]);
 	}
+	// for (int i = 1; i <= size; i++){
+	// 	NervousSystem.SetNeuronExternalInput(i, foodSensor*foodsensorweights[i] + landmarkSensor*landmarksensorweights[i] + otherSensor*othersensorweights[i]);
+	// }
 
 	// Update the nervous system
 	NervousSystem.EulerStep(StepSize);
