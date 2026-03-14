@@ -222,7 +222,7 @@ double stage1(TVector<double> &genotype, RandomState &rs){
                 AgentSignaller.Step(StepSize);
 
                 // clam the signallers position
-                double pos = AgentSignaller.getPosition();
+                double pos = AgentSignaller.GetPosition();
                 
                 if (pos > LANDMARKZONESTART){
                     AgentSignaller.SetPosition(LANDMARKZONESTART);
@@ -426,7 +426,7 @@ double RecordBehavior(TSearch &s, RandomState &rs){
                 AgentSignaller.Step(StepSize);
 
                 // clam the signallers position
-                double pos = AgentSignaller.getPosition();
+                double pos = AgentSignaller.GetPosition();
                 
                 if (pos > LANDMARKZONESTART){
                     AgentSignaller.SetPosition(LANDMARKZONESTART);
