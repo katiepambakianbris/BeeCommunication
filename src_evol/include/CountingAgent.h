@@ -19,7 +19,7 @@ class CountingAgent {
 		~CountingAgent() {};
 
 		// Accessors
-		double GetPosition(void) {return pos;};
+		double Position(void) {return pos;};
 		void SetPosition(double newpos) {pos = newpos;};
 		void SetOther(double distance) {otherSensor=distance;};
 		// void SetFoodSensorWeight(int to, double value) {foodsensorweights[to] = value;};
@@ -40,6 +40,7 @@ class CountingAgent {
 		void ResetNeuralState();
 		// void SenseFood(double pos_food);
 		void SenseLandmarks(double ln, TVector<double> pos_landmarks);
+		void SenseTarget(double pos_target);
 		void SenseOther(double pos_other);
 		void Step(double StepSize);
 

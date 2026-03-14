@@ -21,7 +21,7 @@ void CountingAgent::Set(int networksize, TVector<double> parameters)
 	othersensorweights.SetBounds(1, size);
 	othersensorweights.FillContents(0.0);
 	pos = 0.0;
-	foodSensor = 0.0;
+	// foodSensor = 0.0;
 	landmarkSensor = 0.0;
 	otherSensor = 0.0;
 
@@ -90,6 +90,14 @@ void CountingAgent::SenseLandmarks(double ln, TVector<double> pos_landmarks)
 			landmarkSensor = 1/(1 + exp(8 * (dist - 1)));		
 		}
 	}
+}
+
+void CountingAgent::SenseTarget(double pos_target){
+	double dist = fabs(pos_target - pos);
+		if (dist < 5)
+		{
+			landmarkSensor = 1/(1 + exp(8 * (dist - 1)));		
+		}
 }
 
 // Sense 
