@@ -45,4 +45,5 @@ class CountingAgent {
 		double pos, gain, foodSensor, landmarkSensor, otherSensor;
 		TVector<double> foodsensorweights, landmarksensorweights, othersensorweights;
 		CTRNN NervousSystem;
+		void SenseTarget(double pos_target);
 };

@@ -1287,12 +1287,12 @@ double RecordBehavior4(TSearch &s) {
                         FitnessFile1 << endl;
                     }
                 }
-                BehaviorFile1.close();
-                BehaviorFile2.close();
-                LandmarkFile1.close();
-                LandmarkFile2.close();
-                FitnessFile1.close();
             }
+            BehaviorFile1.close();
+            BehaviorFile2.close();
+            LandmarkFile1.close();
+            LandmarkFile2.close();
+            FitnessFile1.close();
     }
     return (totalfit) / (totaltrials);
 }
