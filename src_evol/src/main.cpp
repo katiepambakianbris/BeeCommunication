@@ -1718,9 +1718,9 @@ int main (int argc, const char* argv[])
         RecordBehavior4(search);
     }
 
-    if (search.BestPerformance() > 0.99){
-        RecordBehaviorTest(search);
-    }
+    // if (search.BestPerformance() > 0.99){
+    //     RecordBehaviorTest(search);
+    // }
 
     #ifdef PRINTTOFILE
         file.close();
