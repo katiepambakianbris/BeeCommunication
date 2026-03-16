@@ -130,6 +130,75 @@ TVector<double> genLandmarks_LeapFrog(RandomState &rs, TVector<double> &landmark
     return landmarkPositions;
 }
 
+double signaller_to_food(TVector<double> &genotype, RandomState &rs){
+    // **** create the receiver ****
+    // Map genotype to phenotype
+    TVector<double> phenotypeReceiver;
+     phenotypeSignaller.SetBounds(1, (int)(VectSize/2));
+    GenPhenMapping(genotype, phenotypeSignaller, 1);
+    CountingAgent AgentSignaller(N, phenotypeSignaller);
+    AgentSignaller.SetPosition(0);
+    AgentSignaller.ResetNeuralState();
+    
+    // **** Generate landmarks (using leapfrog method) ****
+    TVector<double> landmarkPositions;
+    // calculating what the set other should be (value between 0.5 and 1.5)
+    double step = 1.0/(LN-1);
+    double start = 0.5;
+    // trial variables 
+    double food_location;
+    double total_trials = 0;
+    double total_fitness =0;
+    double distance_food_receiver;
+
+    for (int i=0; i<3; i++){
+        genLandmarks_LeapFrog(rs, landmarkPositions);
+        
+        // set each of the landmarks to be the location of the food
+        for (int env =1; env<=LN;env++){
+            // set the food to be at the ith landmark location
+            food_location = landmarkPositions[env];
+
+            // Initialise the agent for this trial
+            AgentSignaller.SetPosition(0);
+            AgentSignaller.ResetNeuralState();
+            AgentSignaller.SetOther(start+step*(env-1));
+
+            double scoringTime = 0.0;
+            double totalScore = 0.0;
+
+            // Let the Receiver and Signaller Explore the enviornment (for 150) -> not scored
+            for (double time=0; time < RunDuration; time += StepSize){
+                AgentSignaller.SenseLandmarks(LN, landmarkPositions);
+                AgentSignaller.SetOther(start+step*env);
+                AgentSignaller.Step(StepSize);
+
+                if (time > TransDuration){
+                    distance_food_receiver = fabs(AgentSignaller.GetPosition() - food_location);
+
+                    // if the distance is within a threshold set the score to be perfect
+                    if (distance_food_receiver < 1 && time > HarshDuration){
+                        distance_food_receiver = 0;
+                    } else if (distance_food_receiver < mindist){
+                        distance_food_receiver = 0;
+                    }
+                    totalScore += distance_food_receiver;
+                    scoringTime += 1;
+                }
+            }
+            // END OF TRIAL
+            // score at the end of this trial
+            double fitness = 1 - ((totalScore/scoringTime)/ArenaLength);
+            if (fitness < 0.0){
+                fitness = 0.0;
+            }
+            total_fitness += fitness;
+            total_trials +=1;
+        }
+    }
+    return total_fitness / total_trials;
+}
+
 // ---------------------------------------------------------
 // stage 1: Evolution of receiver
 // only looking at the distance between the receiver and the 
@@ -707,7 +776,12 @@ int main (int argc, const char* argv[])
     
     /* Evolve */
 
-    // Stage 1: Evolution of Reciver
+    // Stage 0: Evolve the Signaller
+    search.SetSearchTerminationFunction(TerminationFunction);
+    search.SetEvaluationFunction(signaller_to_food);
+    search.ExecuteSearch();
+
+    // Stage 1: Full Task
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(stage1);
     search.ExecuteSearch();
