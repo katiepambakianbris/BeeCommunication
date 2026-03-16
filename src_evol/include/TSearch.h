@@ -134,6 +134,7 @@ class TSearch {
 		// Input and output
     void WriteCheckpointFile(void);
     void ReadCheckpointFile(void);
+	RandomState& getRandomState(){return rs;};
     //friend ostream& operator<<(ostream& os, TSearch& s);
 		//friend istream& operator>>(istream& is, TSearch& s);
 
