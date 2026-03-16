@@ -260,7 +260,7 @@ double stage1(TVector<double> &genotype, RandomState &rs){
 
             for (double time=0; time < RunDuration; time += StepSize){
                 // only let the Signaller move
-                AgentSignaller.SenseFood(input[env-1]);
+                AgentSignaller.SenseFood(food_location);
                 AgentSignaller.SenseLandmarks(LN, landmarkPositions);
                 AgentSignaller.SenseOther(AgentReceiver.GetPosition());
                 AgentSignaller.Step(StepSize);
@@ -284,13 +284,13 @@ double stage1(TVector<double> &genotype, RandomState &rs){
 
                 AgentReceiver.SenseLandmarks(LN, landmarkPositions);
 
-                AgentSignaller.SenseFood(input[env-1]);
+                AgentSignaller.SenseFood(food_location);
 
                 // Move both the agents
                 AgentReceiver.Step(StepSize);
                 AgentSignaller.Step(StepSize);
 
-                // clam the signallers position
+                // clamp the signallers position
                 double pos = AgentSignaller.GetPosition();
                 
                 if (pos > LANDMARKZONESTART){
@@ -442,7 +442,7 @@ double RecordBehavior(TSearch &s, RandomState &rs){
 
             for (double time=0; time < RunDuration; time += StepSize){
                 // only let the Signaller move
-                AgentSignaller.SenseFood(input[env-1]);
+                AgentSignaller.SenseFood(food_location);
                 AgentSignaller.SenseLandmarks(LN, landmarkPositions);
                 AgentSignaller.SenseOther(AgentReceiver.GetPosition());
                 AgentSignaller.Step(StepSize);
@@ -488,7 +488,7 @@ double RecordBehavior(TSearch &s, RandomState &rs){
 
                 AgentReceiver.SenseLandmarks(LN, landmarkPositions);
 
-                AgentSignaller.SenseFood(input[env-1]);
+                AgentSignaller.SenseFood(food_location);
 
                 // Move both the agents
                 AgentReceiver.Step(StepSize);
