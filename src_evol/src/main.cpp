@@ -131,7 +131,7 @@ TVector<double> genLandmarks_LeapFrog(RandomState &rs, TVector<double> &landmark
 }
 
 TVector<double> genLandmarks_Simple(double trial, TVector<double> &landmarkPositions){
-
+    landmarkPositions.SetBounds(1, LN);
     double start = LANDMARKZONESTART +10; // 20
     double spacing = 10; // space them 10 appart
 
@@ -924,7 +924,7 @@ int main (int argc, const char* argv[])
     search.SetEvaluationFunction(stage1);
     search.ExecuteSearch();
 
-    // Stage 1: Full Task
+    // Stage 2: Full Task
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(stage2);
     search.ExecuteSearch();
