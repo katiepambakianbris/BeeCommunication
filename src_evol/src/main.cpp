@@ -130,16 +130,37 @@ TVector<double> genLandmarks_LeapFrog(RandomState &rs, TVector<double> &landmark
     return landmarkPositions;
 }
 
+TVector<double> genLandmarks_Simple(double trial, TVector<double> &landmarkPositions){
+
+    double start = LANDMARKZONESTART +10; // 20
+    double spacing = 10; // space them 10 appart
+
+    for (int i = 1;i <= LN; i ++){
+        landmarkPositions[i] = start + (i-1)*(spacing+trial);
+    }
+
+    return landmarkPositions;
+}
+
 double signaller_to_food(TVector<double> &genotype, RandomState &rs){
     // **** create the receiver ****
     // Map genotype to phenotype
-    TVector<double> phenotypeReceiver;
-     phenotypeSignaller.SetBounds(1, (int)(VectSize/2));
+    TVector<double> phenotypeSignaller, phenotypeReceiver;
+    phenotypeSignaller.SetBounds(1, (int)(VectSize/2));
+    phenotypeReceiver.SetBounds(1, (int)(VectSize/2));
     GenPhenMapping(genotype, phenotypeSignaller, 1);
+    GenPhenMapping(genotype, phenotypeReceiver, (int)(N*N + 5*N +1));
     CountingAgent AgentSignaller(N, phenotypeSignaller);
+    CountingAgent AgentReceiver(N, phenotypeReceiver);
+
     AgentSignaller.SetPosition(0);
     AgentSignaller.ResetNeuralState();
-    
+    AgentSignaller.ResetSensors();
+
+    AgentReceiver.SetPosition(0);
+    AgentReceiver.ResetNeuralState();
+    AgentReceiver.ResetSensors();
+
     // **** Generate landmarks (using leapfrog method) ****
     TVector<double> landmarkPositions;
     // calculating what the set other should be (value between 0.5 and 1.5)
@@ -162,15 +183,18 @@ double signaller_to_food(TVector<double> &genotype, RandomState &rs){
             // Initialise the agent for this trial
             AgentSignaller.SetPosition(0);
             AgentSignaller.ResetNeuralState();
-            AgentSignaller.SetOther(start+step*(env-1));
+            AgentSignaller.ResetSensors();
+            AgentReceiver.SetPosition(0);
 
             double scoringTime = 0.0;
             double totalScore = 0.0;
 
-            // Let the Receiver and Signaller Explore the enviornment (for 150) -> not scored
+            // Let the Signaller Explore the enviornment (for 150) -> not scored
             for (double time=0; time < RunDuration; time += StepSize){
                 AgentSignaller.SenseLandmarks(LN, landmarkPositions);
-                AgentSignaller.SetOther(start+step*env);
+                AgentSignaller.SenseFood(food_location);
+                AgentReceiver.SetPosition(0);
+                AgentSignaller.SenseOther(AgentReceiver.GetPosition());
                 AgentSignaller.Step(StepSize);
 
                 if (time > TransDuration){
@@ -199,6 +223,120 @@ double signaller_to_food(TVector<double> &genotype, RandomState &rs){
     return total_fitness / total_trials;
 }
 
+
+double stage1(TVector<double> &genotype, RandomState &rs){
+    // initalise their genotypes 
+    TVector<double> phenotypeReceiver, phenotypeSignaller;
+    phenotypeSignaller.SetBounds(1, (int)(VectSize/2));
+    GenPhenMapping(genotype, phenotypeSignaller, 1);
+    CountingAgent AgentSignaller(N, phenotypeSignaller);
+    phenotypeReceiver.SetBounds(1, (int)(VectSize/2));
+    GenPhenMapping(genotype, phenotypeReceiver, (int)(N*N + 5*N +1));
+    CountingAgent AgentReceiver(N, phenotypeReceiver);
+
+    // save the state of the signaller and receiver
+    TVector<double> savedstateSignaller, savedstateReceiver;
+    savedstateSignaller.SetBounds(1,N); 
+    savedstateReceiver.SetBounds(1, N);
+
+    // Landmark Positions
+    TVector<double> landmarkPositions;
+
+    // trial variables 
+    double food_location;
+    double total_trials = 0;
+    double total_fitness =0;
+    double distance_food_receiver;
+
+    for (int i=0; i<3; i++){
+        genLandmarks_Simple(i, landmarkPositions);
+        // set each of the landmarks to be the location of the food
+        for (int env =1; env<=LN;env++){
+
+            // ******** SETUP **********
+
+            // set the food to be at the ith landmark location
+            food_location = landmarkPositions[env];
+
+            // Initialise the agent for this trial
+            AgentReceiver.SetPosition(0);
+            AgentReceiver.ResetNeuralState();
+            AgentReceiver.ResetSensors();
+
+            // Initialise the agent for this trial
+            double location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
+            AgentSignaller.SetPosition(location);
+            AgentSignaller.ResetNeuralState();
+            AgentSignaller.ResetSensors();
+
+            // Phase 1 (Training Phase) -> signaller wondering
+
+            for (double time=0; time < RunDuration; time += StepSize){
+                // only let the Signaller move
+                AgentSignaller.SenseFood(food_location);
+                AgentSignaller.SenseLandmarks(LN, landmarkPositions);
+                AgentSignaller.SenseOther(AgentReceiver.GetPosition());
+                AgentSignaller.Step(StepSize);
+            }
+            
+            // Reset
+            AgentReceiver.SetPosition(0);
+            AgentSignaller.SetPosition(location);
+            AgentReceiver.ResetSensors();
+            AgentSignaller.ResetSensors();
+
+            // Phase 2/3 (Training + scoring Phase)
+
+            double scoringTime = 0.0;
+            double totalScore = 0.0;
+            
+            for (double time=0; time < RunDuration*2; time += StepSize){
+                // Receiver and Signaller only see each other 
+                AgentReceiver.SenseOther(AgentSignaller.GetPosition());
+                AgentSignaller.SenseOther(AgentReceiver.GetPosition());
+
+                AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+
+                AgentSignaller.SenseFood(food_location);
+
+                // Move both the agents
+                AgentReceiver.Step(StepSize);
+                AgentSignaller.Step(StepSize);
+
+                // clamp the signallers position
+                double pos = AgentSignaller.GetPosition();
+                
+                if (pos > LANDMARKZONESTART){
+                    AgentSignaller.SetPosition(LANDMARKZONESTART);
+                }
+
+                if (time > TransDuration*2){
+                    distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
+
+                    // if the distance is within a threshold set the score to be perfect
+                    if (distance_food_receiver < 1 && time > HarshDuration){
+                        distance_food_receiver = 0;
+                    } else if (distance_food_receiver < mindist){
+                        distance_food_receiver = 0;
+                    }
+                    totalScore += distance_food_receiver;
+                    scoringTime += 1;
+                }
+            }
+            // END OF TRIAL
+            // score at the end of this trial
+            double fitness = 1 - ((totalScore/scoringTime)/ArenaLength);
+            if (fitness < 0.0){
+                fitness = 0.0;
+            }
+            total_fitness += fitness;
+            total_trials +=1;
+
+        }
+    }
+    return total_fitness / total_trials;
+}
+
 // ---------------------------------------------------------
 // stage 1: Evolution of receiver
 // only looking at the distance between the receiver and the 
@@ -208,7 +346,7 @@ double signaller_to_food(TVector<double> &genotype, RandomState &rs){
 // of the landmarks the receiver should go to
 // ---------------------------------------------------------
 
-double stage1(TVector<double> &genotype, RandomState &rs){
+double stage2(TVector<double> &genotype, RandomState &rs){
     // initalise their genotypes 
     TVector<double> phenotypeReceiver, phenotypeSignaller;
     phenotypeSignaller.SetBounds(1, (int)(VectSize/2));
@@ -781,9 +919,14 @@ int main (int argc, const char* argv[])
     search.SetEvaluationFunction(signaller_to_food);
     search.ExecuteSearch();
 
-    // Stage 1: Full Task
+    // Stage 1: A Slightly Easier task (simpler landmark generation)
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(stage1);
+    search.ExecuteSearch();
+
+    // Stage 1: Full Task
+    search.SetSearchTerminationFunction(TerminationFunction);
+    search.SetEvaluationFunction(stage2);
     search.ExecuteSearch();
 
 
