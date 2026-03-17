@@ -1379,16 +1379,16 @@ double RecordBehaviorTest(TSearch &s, RandomState &rs) {
     for (int env = 1; env <= LN; env += 1){
             std::string s_env = std::to_string(env);
             ofstream BehaviorFile1, BehaviorFile2;
-            BehaviorFile1.open( dir + "behavior_" + current_run + "_Env" + s_env  + "_stage4" + "_Phase1.dat");
-            BehaviorFile2.open( dir + "behavior_" + current_run + "_Env" + s_env + "_stage4" + "_Phase2.dat");
+            BehaviorFile1.open( dir + "behavior_" + current_run + "_Env" + s_env  + "_test" + "_Phase1.dat");
+            BehaviorFile2.open( dir + "behavior_" + current_run + "_Env" + s_env + "_test" + "_Phase2.dat");
         
             // stores the location of the landmarks and the food
             ofstream LandmarkFile1, LandmarkFile2;
-            LandmarkFile1.open(dir + "landmark_location_"+current_run+"_env"+s_env+ "_stage4" + "_phase1.dat");
-            LandmarkFile2.open(dir + "landmark_location_"+current_run+"_env"+s_env + "_stage4" + "_phase2.dat");
+            LandmarkFile1.open(dir + "landmark_location_"+current_run+"_env"+s_env+ "_test" + "_phase1.dat");
+            LandmarkFile2.open(dir + "landmark_location_"+current_run+"_env"+s_env + "_test" + "_phase2.dat");
 
             ofstream FitnessFile1;
-            FitnessFile1.open(dir + "fitness_"+current_run+"_env"+s_env + "_stage4" + ".dat");
+            FitnessFile1.open(dir + "fitness_"+current_run+"_env"+s_env + "_test" + ".dat");
 
             // PHASE 1 : training
             // Establish food location
