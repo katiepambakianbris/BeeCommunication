@@ -212,15 +212,18 @@ double signaller_to_food(TVector<double> &genotype, RandomState &rs){
             }
             // END OF TRIAL
             // score at the end of this trial
-            double fitness = 1 - ((totalScore/scoringTime)/ArenaLength);
-            if (fitness < 0.0){
-                fitness = 0.0;
+            double fitness = 0;
+            if (scoringTime > 0){
+                fitness = 1 - ((totalScore/scoringTime)/ArenaLength);
+                if (fitness < 0.0){
+                    fitness = 0.0;
+                }
             }
             total_fitness += fitness;
             total_trials +=1;
         }
     }
-    return total_fitness / total_trials;
+    return (total_trials > 0) ? total_fitness / total_trials : 0.0;
 }
 
 
@@ -325,16 +328,19 @@ double stage1(TVector<double> &genotype, RandomState &rs){
             }
             // END OF TRIAL
             // score at the end of this trial
-            double fitness = 1 - ((totalScore/scoringTime)/ArenaLength);
-            if (fitness < 0.0){
-                fitness = 0.0;
+            double fitness = 0;
+            if (scoringTime > 0){
+                fitness = 1 - ((totalScore/scoringTime)/ArenaLength);
+                if (fitness < 0.0){
+                    fitness = 0.0;
+                }
             }
             total_fitness += fitness;
             total_trials +=1;
 
         }
     }
-    return total_fitness / total_trials;
+    return (total_trials > 0) ? total_fitness / total_trials : 0.0;
 }
 
 // ---------------------------------------------------------
@@ -369,8 +375,6 @@ double stage2(TVector<double> &genotype, RandomState &rs){
     double total_trials = 0;
     double total_fitness =0;
     double distance_food_receiver;
-
-    double input[3] = {0.5,1.0,1.5};
 
 
     for (int i=0; i<3; i++){
@@ -450,16 +454,19 @@ double stage2(TVector<double> &genotype, RandomState &rs){
             }
             // END OF TRIAL
             // score at the end of this trial
-            double fitness = 1 - ((totalScore/scoringTime)/ArenaLength);
-            if (fitness < 0.0){
-                fitness = 0.0;
+            double fitness = 0;
+            if (scoringTime > 0){
+                fitness = 1 - ((totalScore/scoringTime)/ArenaLength);
+                if (fitness < 0.0){
+                    fitness = 0.0;
+                }
             }
             total_fitness += fitness;
             total_trials +=1;
 
         }
     }
-    return total_fitness / total_trials;
+    return (total_trials > 0) ? total_fitness / total_trials : 0.0;
 }
 
 double RecordBehavior(TSearch &s, RandomState &rs){
@@ -529,8 +536,6 @@ double RecordBehavior(TSearch &s, RandomState &rs){
 
     // **** Generate landmarks (using leapfrog method) ****
     TVector<double> landmarkPositions;
-
-    double input[3] = {0.5,1.0,1.5};
 
     // calculating what the set other should be (value between 0.5 and 1.5)
     for (int i=0; i<3; i++){
@@ -671,9 +676,12 @@ double RecordBehavior(TSearch &s, RandomState &rs){
 
             // END OF TRIAL
             // score at the end of this trial
-            double fitness = 1 - ((totalScore/scoringTime)/ArenaLength);
-            if (fitness < 0.0){
-                fitness = 0.0;
+            double fitness = 0;
+            if (scoringTime > 0){
+                fitness = 1 - ((totalScore/scoringTime)/ArenaLength);
+                if (fitness < 0.0){
+                    fitness = 0.0;
+                }
             }
             total_fitness += fitness;
             total_trials +=1;
@@ -705,7 +713,7 @@ double RecordBehavior(TSearch &s, RandomState &rs){
     NeuronR1.close();
     NeuronR2.close();
     NeuronR3.close();
-    return total_fitness / total_trials;
+    return (total_trials > 0) ? total_fitness / total_trials : 0.0;
 }
 
 // ================================================
@@ -849,7 +857,7 @@ int main (int argc, const char* argv[])
     // Setup
     // ######################
     // check that argv[1] has been provided
-    if (argc < 3){
+    if (argc < 4){
         // send an error message to the terminal
         std::cerr << "Error: missing run or array index number.\n";
         return 1;
