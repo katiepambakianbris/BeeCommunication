@@ -51,8 +51,8 @@ const double TransDuration = 150.0;
 const double HarshDuration = 20.0;
 // this was originally 50 -> length of the arena
 const double ArenaLength = LANDMARKZONEEND - SIGNALLERSTART;      
-const double mindist = 2.0;     
-const double hardDurationMinDist = 0.5;
+const double mindist = 3.0;     
+const double hardDurationMinDist = 1;
 
 // ------------------------------------
 // Genotype-Phenotype Mapping Functions
@@ -357,7 +357,7 @@ double Fitness1(TVector<double> &genotype, RandomState &rs){
                         AgentSignaller.SetPosition(LANDMARKZONESTART);
                     }
 
-                    if (time > TransDuration){
+                    if (time > RunDuration+TransDuration){
                         distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
 
                         // if the distance is within a threshold set the score to be perfect
@@ -528,7 +528,7 @@ double Fitness2(TVector<double> &genotype, RandomState &rs){
                         AgentSignaller.SetPosition(LANDMARKZONESTART);
                     }
 
-                    if (time > TransDuration){
+                    if (time > RunDuration+TransDuration){
                         distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
 
                         // if the distance is within a threshold set the score to be perfect
@@ -691,7 +691,7 @@ double Fitness3(TVector<double> &genotype, RandomState &rs){
                             AgentSignaller.SetPosition(LANDMARKZONESTART);
                         }
 
-                        if (time > TransDuration){
+                        if (time > RunDuration+TransDuration){
                             distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
 
                             // if the distance is within a threshold set the score to be perfect
@@ -984,7 +984,7 @@ double RecordBehavior(TSearch &s, RandomState &rs){
                     }
                     
 
-                    if (time > TransDuration){
+                    if (time > RunDuration+TransDuration){
                         distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
 
                         // if the distance is within a threshold set the score to be perfect
