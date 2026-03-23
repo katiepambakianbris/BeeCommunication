@@ -54,6 +54,10 @@ const double ArenaLength = LANDMARKZONEEND;
 const double mindist = 3.0;     
 const double hardDurationMinDist = 1;
 
+int call_count = 0;
+
+std::string dir;
+
 // ------------------------------------
 // Genotype-Phenotype Mapping Functions
 // ------------------------------------
@@ -565,6 +569,8 @@ double Fitness2(TVector<double> &genotype, RandomState &rs){
 
 
 double Fitness3(TVector<double> &genotype, RandomState &rs){
+    call_count ++;
+
     // initalise their genotypes 
     TVector<double> phenotypeReceiver, phenotypeSignaller;
     phenotypeSignaller.SetBounds(1, (int)(VectSize/2));
@@ -587,6 +593,10 @@ double Fitness3(TVector<double> &genotype, RandomState &rs){
     double total_trials = 0;
     double total_fitness =0;
     double distance_food_receiver;
+
+    double env_fitness[LN+1] = {0};  // store fitness per env
+    double env_receiver_pos[LN+1] = {0};
+    double env_food_loc[LN+1] = {0};
 
 
     for (int env =1; env<=LN;env++){
@@ -721,11 +731,31 @@ double Fitness3(TVector<double> &genotype, RandomState &rs){
                 }
                 total_fitness += fitness;
                 total_trials +=1;
+
+                // for debug
+                env_fitness[env] += fitness;
+                env_receiver_pos[env] = AgentReceiver.GetPosition();
+                env_food_loc[env] = food_location;
             }
         }
     }
+
+    double final_fitness = (total_trials > 0) ? total_fitness / total_trials : 0.0;
     
-    return (total_trials > 0) ? total_fitness / total_trials : 0.0;
+    // Write debug at end of this call
+    ofstream debugfile;
+    std::string file_name = dir + "fitness3_debug.dat";
+    debugfile.open(file_name, std::ios::app); // append to the end of the file
+    debugfile << "call=" << call_count << " total_fitness=" << final_fitness;
+    for (int i = 1; i <= LN; i++){
+        debugfile << " env" << i << "_fitness=" << env_fitness[i]/9.0  // 9 trials per env
+                  << " env" << i << "_receiver=" << env_receiver_pos[i]
+                  << " env" << i << "_food=" << env_food_loc[i];
+    }
+    debugfile << endl;
+    debugfile.close();
+
+    return final_fitness;
 }
 
 double RecordBehavior(TSearch &s, RandomState &rs){
@@ -1214,7 +1244,7 @@ int main (int argc, const char* argv[])
     std::string result_dir = "/user/work/yj23812/BeeCommunication/results/"+ date_as_string() +"/" + slurm_job_id;
     // std::string result_dir = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/"+ date_as_string() +"/v";
 
-    std::string dir = result_dir +"/batch_"+ batch_number +"/run_"+ current_run +"/";
+    dir = result_dir +"/batch_"+ batch_number +"/run_"+ current_run +"/";
     // there is not acutally an error here
     std::filesystem::create_directories(dir);
 
