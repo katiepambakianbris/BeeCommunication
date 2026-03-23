@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <fstream>
 #include <assert.h>
+#include <vector>
 
 #define PRINTTOFILE
 
@@ -57,6 +58,17 @@ const double hardDurationMinDist = 1;
 int call_count = 0;
 
 std::string dir;
+
+struct TrialData{
+    std::vector<double> signaller_pos;
+    std::vector<double> receiver_pos;
+    std::vector<double> neuron_s1, neuron_s2, neuron_s3;
+    std::vector<double> neuron_r1, neuron_r2, neuron_r3;
+    std::vector<double> fitness_over_time;
+    std::vector<double> landmark_positions;
+    double food_location;
+    double fitness;
+};
 
 // ------------------------------------
 // Genotype-Phenotype Mapping Functions
@@ -758,6 +770,376 @@ double Fitness3(TVector<double> &genotype, RandomState &rs){
     return final_fitness;
 }
 
+
+double Fitness3_withRecord(TVector<double> &genotype, RandomState &rs){
+    call_count ++;
+
+    // initalise their genotypes 
+    TVector<double> phenotypeReceiver, phenotypeSignaller;
+    phenotypeSignaller.SetBounds(1, (int)(VectSize/2));
+    GenPhenMapping(genotype, phenotypeSignaller, 1);
+    CountingAgent AgentSignaller(N, phenotypeSignaller);
+    phenotypeReceiver.SetBounds(1, (int)(VectSize/2));
+    GenPhenMapping(genotype, phenotypeReceiver, (int)(N*N + 5*N +1));
+    CountingAgent AgentReceiver(N, phenotypeReceiver);
+
+    // save the state of the signaller and receiver
+    TVector<double> savedStateSignaller, savedStateReceiver;
+    savedStateSignaller.SetBounds(1,N); 
+    savedStateReceiver.SetBounds(1, N);
+
+    // Landmark Positions
+    TVector<double> landmarkPositions;
+
+    // trial variables 
+    double food_location;
+    double total_trials = 0;
+    double total_fitness =0;
+    double distance_food_receiver;
+
+    double env_fitness[LN+1] = {0};  // store fitness per env
+    double env_receiver_pos[LN+1] = {0};
+    double env_food_loc[LN+1] = {0};
+
+    // storage for testing phase
+    std::vector<std::vector<TrialData>> all_trials(LN+1, std::vector<TrialData>(9)); // [env][trial_num]
+
+    // storage for initial phase
+    std::vector<std::vector<double>> phase1_signaller(LN+1); // one row for each env
+    std::vector<std::vector<double>> phase1_receiver(LN+1);
+    std::vector<std::vector<double>> phase1_ns1(LN+1), phase1_ns2(LN+1), phase1_ns3(LN+1);
+    std::vector<std::vector<double>> phase1_nr1(LN+1), phase1_nr2(LN+1), phase1_nr3(LN+1);
+    std::vector<double> phase1_food(LN+1);
+    std::vector<std::vector<double>> phase1_landmark(LN+1);
+
+    for (int env =1; env<=LN;env++){
+        // ******** SETUP **********
+        genLandmarks_Simple(0, 0, landmarkPositions);
+
+        // set the food to be at the ith landmark location
+        food_location = landmarkPositions[env];
+
+        phase1_food[env] = food_location;
+        phase1_landmark[env].clear();
+        for (int l = 1; l <= LN; l++){
+            phase1_landmark[env].push_back(landmarkPositions[l]);
+        }
+
+        // Initialise the agent for this trial
+        AgentReceiver.SetPosition(0);
+        AgentReceiver.ResetNeuralState();
+        AgentReceiver.ResetSensors();
+
+        // Initialise the agent for this trial
+        double location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
+        AgentSignaller.SetPosition(location);
+        AgentSignaller.ResetNeuralState();
+        AgentSignaller.ResetSensors();
+
+        // Phase 1 (Training Phase) -> signaller wondering
+
+        for (double time=0; time < RunDuration; time += StepSize){
+            // only let the Signaller move
+            AgentSignaller.SenseFood(food_location);
+            AgentSignaller.SenseLandmarks(LN, landmarkPositions);
+            AgentSignaller.SenseOther(AgentReceiver.GetPosition());
+            AgentSignaller.Step(StepSize);
+
+            // record that timestep
+            phase1_signaller[env].push_back(AgentSignaller.GetPosition());
+            phase1_receiver[env].push_back(AgentReceiver.GetPosition());
+            phase1_ns1[env].push_back(AgentSignaller.NervousSystem.NeuronState(1));
+            phase1_ns2[env].push_back(AgentSignaller.NervousSystem.NeuronState(2));
+            phase1_ns3[env].push_back(AgentSignaller.NervousSystem.NeuronState(3));
+            phase1_nr1[env].push_back(AgentReceiver.NervousSystem.NeuronState(1));
+            phase1_nr2[env].push_back(AgentReceiver.NervousSystem.NeuronState(2));
+            phase1_nr3[env].push_back(AgentReceiver.NervousSystem.NeuronState(3));
+        }
+        
+        // Reset
+        AgentReceiver.SetPosition(0);
+        AgentSignaller.SetPosition(location);
+        AgentReceiver.ResetSensors();
+        AgentSignaller.ResetSensors();
+
+        // Phase 2/3 (Training + scoring Phase)
+        
+        for (double time=0; time < RunDuration*2; time += StepSize){
+            // Receiver and Signaller only see each other 
+            AgentReceiver.SenseOther(AgentSignaller.GetPosition());
+            AgentSignaller.SenseOther(AgentReceiver.GetPosition());
+
+            AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+
+            AgentSignaller.SenseFood(food_location);
+
+            // Move both the agents
+            AgentReceiver.Step(StepSize);
+            AgentSignaller.Step(StepSize);
+
+            // clamp the signallers position
+            double pos = AgentSignaller.GetPosition();
+            
+            if (pos > LANDMARKZONESTART){
+                AgentSignaller.SetPosition(LANDMARKZONESTART);
+            }
+
+            // record the timestep
+            phase1_signaller[env].push_back(AgentSignaller.GetPosition());
+            phase1_receiver[env].push_back(AgentReceiver.GetPosition());
+            phase1_ns1[env].push_back(AgentSignaller.NervousSystem.NeuronState(1));
+            phase1_ns2[env].push_back(AgentSignaller.NervousSystem.NeuronState(2));
+            phase1_ns3[env].push_back(AgentSignaller.NervousSystem.NeuronState(3));
+            phase1_nr1[env].push_back(AgentReceiver.NervousSystem.NeuronState(1));
+            phase1_nr2[env].push_back(AgentReceiver.NervousSystem.NeuronState(2));
+            phase1_nr3[env].push_back(AgentReceiver.NervousSystem.NeuronState(3));
+        }
+
+        for (int i= 1; i<=N;i ++){
+            savedStateReceiver[i] = AgentReceiver.NervousSystem.NeuronState(i);
+        }
+        for (int i= 1; i<=N;i ++){
+            savedStateSignaller[i] = AgentSignaller.NervousSystem.NeuronState(i);
+        }
+
+        int trial_num = 0;
+
+        for (double ref_var = -2.0; ref_var <= 2.0; ref_var += 2.0){
+            for (double sep_var = -2.0; sep_var <= 2.0; sep_var += 2.0){
+                AgentReceiver.SetPosition(0);
+                AgentSignaller.SetPosition(location);
+                AgentReceiver.ResetSensors();
+                AgentSignaller.ResetSensors();
+
+                genLandmarks_Simple(ref_var, sep_var, landmarkPositions);
+                food_location = landmarkPositions[env];
+                double lengthZone = landmarkPositions[LN] - landmarkPositions[1];
+
+                for (int i= 1; i<=N; i++){
+                    AgentReceiver.NervousSystem.SetNeuronState(i, savedStateReceiver[i]);
+                }
+                for (int i= 1; i<=N; i++){
+                    AgentSignaller.NervousSystem.SetNeuronState(i, savedStateSignaller[i]);
+                }
+
+                // Phase 2/3 (Training + scoring Phase)
+
+                double scoringTime = 0.0;
+                double totalScore = 0.0;
+
+                TrialData &td = all_trials[env][trial_num];
+
+                td.food_location = food_location;
+                td.landmark_positions.clear();
+                for (int l = 1; l <= LN; l++) {
+                    td.landmark_positions.push_back(landmarkPositions[l]);
+                }
+
+                // record initial position
+                td.signaller_pos.push_back(AgentSignaller.GetPosition());
+                td.receiver_pos.push_back(AgentReceiver.GetPosition());
+                td.neuron_s1.push_back(AgentSignaller.NervousSystem.NeuronState(1));
+                td.neuron_s2.push_back(AgentSignaller.NervousSystem.NeuronState(2));
+                td.neuron_s3.push_back(AgentSignaller.NervousSystem.NeuronState(3));
+                td.neuron_r1.push_back(AgentReceiver.NervousSystem.NeuronState(1));
+                td.neuron_r2.push_back(AgentReceiver.NervousSystem.NeuronState(2));
+                td.neuron_r3.push_back(AgentReceiver.NervousSystem.NeuronState(3));
+                
+                for (double time=0; time < RunDuration*2; time += StepSize){
+                    // Receiver and Signaller only see each other 
+                    AgentReceiver.SenseOther(AgentSignaller.GetPosition());
+                    AgentSignaller.SenseOther(AgentReceiver.GetPosition());
+
+                    AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+
+                    AgentSignaller.SenseFood(food_location);
+
+                    // Move both the agents
+                    AgentReceiver.Step(StepSize);
+                    AgentSignaller.Step(StepSize);
+
+                    // clamp the signallers position
+                    double pos = AgentSignaller.GetPosition();
+                    
+                    if (pos > LANDMARKZONESTART){
+                        AgentSignaller.SetPosition(LANDMARKZONESTART);
+                    }
+
+                    if (time > RunDuration+TransDuration){
+                        distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
+
+                        // if the distance is within a threshold set the score to be perfect
+                        if (distance_food_receiver < 1 && time > HarshDuration+TransDuration+RunDuration){
+                            distance_food_receiver = 0;
+                        } else if (distance_food_receiver < mindist){
+                            distance_food_receiver = 0;
+                        }
+                        totalScore += distance_food_receiver;
+                        scoringTime += 1;
+
+                        // record fitness over time
+                        if (scoringTime > 0){
+                            td.fitness_over_time.push_back(1 - ((totalScore/scoringTime)/lengthZone));
+                        }
+                    }
+
+                    td.signaller_pos.push_back(AgentSignaller.GetPosition());
+                    td.receiver_pos.push_back(AgentReceiver.GetPosition());
+                    td.neuron_s1.push_back(AgentSignaller.NervousSystem.NeuronState(1));
+                    td.neuron_s2.push_back(AgentSignaller.NervousSystem.NeuronState(2));
+                    td.neuron_s3.push_back(AgentSignaller.NervousSystem.NeuronState(3));
+                    td.neuron_r1.push_back(AgentReceiver.NervousSystem.NeuronState(1));
+                    td.neuron_r2.push_back(AgentReceiver.NervousSystem.NeuronState(2));
+                    td.neuron_r3.push_back(AgentReceiver.NervousSystem.NeuronState(3));
+
+                }
+                // length of the landmark zone
+
+                // END OF TRIAL
+                // score at the end of this trial
+                double fitness = 0;
+                if (scoringTime > 0){
+                    fitness = 1 - ((totalScore/scoringTime)/lengthZone);
+                    if (fitness < 0.0){
+                        fitness = 0.0;
+                    }
+                }
+                total_fitness += fitness;
+                total_trials +=1;
+
+                // for debug
+                env_fitness[env] += fitness;
+                env_receiver_pos[env] = AgentReceiver.GetPosition();
+                env_food_loc[env] = food_location;
+
+                td.fitness = fitness;
+                trial_num++;
+            }
+        }
+    }
+
+    double final_fitness = (total_trials > 0) ? total_fitness / total_trials : 0.0;
+    
+    // Write debug at end of this call
+    ofstream debugfile;
+    std::string file_name = dir + "fitness3_debug.dat";
+    debugfile.open(file_name, std::ios::app); // append to the end of the file
+    debugfile << "call=" << call_count << " total_fitness=" << final_fitness;
+    for (int i = 1; i <= LN; i++){
+        debugfile << " env" << i << "_fitness=" << env_fitness[i]/9.0  // 9 trials per env
+                  << " env" << i << "_receiver=" << env_receiver_pos[i]
+                  << " env" << i << "_food=" << env_food_loc[i];
+    }
+    debugfile << endl;
+    debugfile.close();
+
+
+    // If the behaviour was what we wanted record it
+
+    if (final_fitness > 0.99){
+        std::string run_id = std::to_string(call_count);
+
+        ofstream TotalFitnessFile;
+        TotalFitnessFile.open(dir + "total_fitness_" + run_id + ".dat");
+
+        double running_total = 0.0;
+        int running_trials = 0;
+
+        for (int env = 1; env <= LN; env++){
+            std::string s_env = std::to_string(env);
+
+            // open all the same files as RecordBehavior
+            ofstream SignallerBehaviorFile, ReceiverBehaviorFile;
+            SignallerBehaviorFile.open(dir + "behavior_Signaller_training_env_" + s_env + "_" + run_id + ".dat");
+            ReceiverBehaviorFile.open(dir + "behavior_Receiver_training_env_" + s_env + "_" + run_id + ".dat");
+
+            ofstream SignallerBehaviorFile2, ReceiverBehaviorFile2;
+            SignallerBehaviorFile2.open(dir + "behavior_Signaller_testing_env_" + s_env + "_" + run_id + ".dat");
+            ReceiverBehaviorFile2.open(dir + "behavior_Receiver_testing_env_" + s_env + "_" + run_id + ".dat");
+
+            ofstream FitnessFile, LandmarkFile, LandmarkFile2;
+            FitnessFile.open(dir + "fitness_env_" + s_env + "_" + run_id + ".dat");
+            LandmarkFile.open(dir + "landmark_location_training_env_" + s_env + "_" + run_id + ".dat");
+            LandmarkFile2.open(dir + "landmark_location_testing_env_" + s_env + "_" + run_id + ".dat");
+
+            ofstream NeuronS1, NeuronS2, NeuronS3, NeuronR1, NeuronR2, NeuronR3;
+            NeuronS1.open(dir + "signaller_neuron1_training_env_" + s_env + "_" + run_id + ".dat");
+            NeuronS2.open(dir + "signaller_neuron2_training_env_" + s_env + "_" + run_id + ".dat");
+            NeuronS3.open(dir + "signaller_neuron3_training_env_" + s_env + "_" + run_id + ".dat");
+            NeuronR1.open(dir + "receiver_neuron1_training_env_" + s_env + "_" + run_id + ".dat");
+            NeuronR2.open(dir + "receiver_neuron2_training_env_" + s_env + "_" + run_id + ".dat");
+            NeuronR3.open(dir + "receiver_neuron3_training_env_" + s_env + "_" + run_id + ".dat");
+
+            ofstream NeuronS12, NeuronS22, NeuronS32, NeuronR12, NeuronR22, NeuronR32;
+            NeuronS12.open(dir + "signaller_neuron1_testing_env_" + s_env + "_" + run_id + ".dat");
+            NeuronS22.open(dir + "signaller_neuron2_testing_env_" + s_env + "_" + run_id + ".dat");
+            NeuronS32.open(dir + "signaller_neuron3_testing_env_" + s_env + "_" + run_id + ".dat");
+            NeuronR12.open(dir + "receiver_neuron1_testing_env_" + s_env + "_" + run_id + ".dat");
+            NeuronR22.open(dir + "receiver_neuron2_testing_env_" + s_env + "_" + run_id + ".dat");
+            NeuronR32.open(dir + "receiver_neuron3_testing_env_" + s_env + "_" + run_id + ".dat");
+
+            // write phase 1
+            for (double p : phase1_signaller[env]) SignallerBehaviorFile << p << " ";
+            for (double p : phase1_receiver[env])  ReceiverBehaviorFile  << p << " ";
+            for (double p : phase1_ns1[env]) NeuronS1 << p << " ";
+            for (double p : phase1_ns2[env]) NeuronS2 << p << " ";
+            for (double p : phase1_ns3[env]) NeuronS3 << p << " ";
+            for (double p : phase1_nr1[env]) NeuronR1 << p << " ";
+            for (double p : phase1_nr2[env]) NeuronR2 << p << " ";
+            for (double p : phase1_nr3[env]) NeuronR3 << p << " ";
+            for (double lp : phase1_landmark[env]) LandmarkFile << lp << " ";
+            LandmarkFile << phase1_food[env] << " ";
+
+            // write each trial (testing phase)
+            for (int t = 0; t < 9; t++){
+                TrialData &td = all_trials[env][t];
+
+                // landmark file
+                for (double lp : td.landmark_positions) LandmarkFile2 << lp << " ";
+                LandmarkFile2 << td.food_location << " ";
+                LandmarkFile2 << endl;
+
+                // positions
+                for (double p : td.signaller_pos) SignallerBehaviorFile2 << p << " ";
+                for (double p : td.receiver_pos)  ReceiverBehaviorFile2  << p << " ";
+                SignallerBehaviorFile2 << endl;
+                ReceiverBehaviorFile2  << endl;
+
+                // neurons
+                for (double p : td.neuron_s1) NeuronS12 << p << " ";
+                for (double p : td.neuron_s2) NeuronS22 << p << " ";
+                for (double p : td.neuron_s3) NeuronS32 << p << " ";
+                for (double p : td.neuron_r1) NeuronR12 << p << " ";
+                for (double p : td.neuron_r2) NeuronR22 << p << " ";
+                for (double p : td.neuron_r3) NeuronR32 << p << " ";
+                NeuronS12 << endl; NeuronS22 << endl; NeuronS32 << endl;
+                NeuronR12 << endl; NeuronR22 << endl; NeuronR32 << endl;
+
+                // fitness over time
+                for (double f : td.fitness_over_time) FitnessFile << f << " ";
+                FitnessFile << endl;
+
+                // total fitness running average
+                running_total += td.fitness;
+                running_trials++;
+                TotalFitnessFile << running_total / running_trials << " ";
+                TotalFitnessFile << endl;
+            }
+
+            SignallerBehaviorFile.close();  ReceiverBehaviorFile.close();
+            SignallerBehaviorFile2.close(); ReceiverBehaviorFile2.close();
+            FitnessFile.close();      LandmarkFile.close();
+            NeuronS1.close(); NeuronS2.close(); NeuronS3.close();
+            NeuronR1.close(); NeuronR2.close(); NeuronR3.close();
+            NeuronS12.close(); NeuronS22.close(); NeuronS32.close();
+            NeuronR12.close(); NeuronR22.close(); NeuronR32.close();
+        }
+        TotalFitnessFile.close();
+    }
+
+    return final_fitness;
+}
+
 double RecordBehavior(TSearch &s, RandomState &rs){
     std::string current_run = s.CurrentRun();
     std::string dir = s.Directory();
@@ -1312,13 +1694,13 @@ int main (int argc, const char* argv[])
 
     // Stage 2: Full Task
     search.SetSearchTerminationFunction(TerminationFunction);
-    search.SetEvaluationFunction(Fitness3);
+    search.SetEvaluationFunction(Fitness3_withRecord);
     search.ExecuteSearch();
 
 
-    if (search.BestPerformance() > 0.99) {
-        RecordBehavior(search, search.getRandomState());
-    }
+    // if (search.BestPerformance() > 0.99) {
+    //     RecordBehavior(search, search.getRandomState());
+    // }
 
     #ifdef PRINTTOFILE
         file.close();
