@@ -1694,7 +1694,7 @@ int main (int argc, const char* argv[])
 
     // Stage 2: Full Task
     search.SetSearchTerminationFunction(TerminationFunction);
-    search.SetEvaluationFunction(Fitness3_withRecord);
+    search.SetEvaluationFunction(Fitness3);
     search.ExecuteSearch();
 
     if (search.BestPerformance() > 0.99) {
