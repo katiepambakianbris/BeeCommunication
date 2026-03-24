@@ -289,8 +289,8 @@ double Fitness1(TVector<double> &genotype, RandomState &rs){
         AgentReceiver.ResetSensors();
 
         // Initialise the agent for this trial
-        double location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
-        AgentSignaller.SetPosition(location);
+        // double location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
+        AgentSignaller.SetPosition(0);
         AgentSignaller.ResetNeuralState();
         AgentSignaller.ResetSensors();
 
@@ -308,7 +308,7 @@ double Fitness1(TVector<double> &genotype, RandomState &rs){
 
         // Reset
         AgentReceiver.SetPosition(0);
-        AgentSignaller.SetPosition(location);
+        AgentSignaller.SetPosition(0);
         AgentReceiver.ResetSensors();
         AgentSignaller.ResetSensors();
 
@@ -331,7 +331,7 @@ double Fitness1(TVector<double> &genotype, RandomState &rs){
             double pos = AgentSignaller.GetPosition();
             
             if (pos > LANDMARKZONESTART){
-                AgentSignaller.SetPosition(LANDMARKZONESTART);
+                AgentSignaller.SetPosition(LANDMARKZONESTART-5);
             }
         }
 
@@ -373,8 +373,8 @@ double Fitness1(TVector<double> &genotype, RandomState &rs){
                     // clamp the signallers position
                     double pos = AgentSignaller.GetPosition();
                     
-                    if (pos > LANDMARKZONESTART){
-                        AgentSignaller.SetPosition(LANDMARKZONESTART);
+                    if (pos > LANDMARKZONESTART-5){
+                        AgentSignaller.SetPosition(LANDMARKZONESTART-5);
                     }
 
                     if (time > RunDuration+TransDuration){
@@ -458,8 +458,8 @@ double Fitness2(TVector<double> &genotype, RandomState &rs){
         AgentReceiver.ResetSensors();
 
         // Initialise the agent for this trial
-        double location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
-        AgentSignaller.SetPosition(location);
+        // double location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
+        AgentSignaller.SetPosition(0);
         AgentSignaller.ResetNeuralState();
         AgentSignaller.ResetSensors();
 
@@ -475,7 +475,7 @@ double Fitness2(TVector<double> &genotype, RandomState &rs){
         
         // Reset
         AgentReceiver.SetPosition(0);
-        AgentSignaller.SetPosition(location);
+        AgentSignaller.SetPosition(0);
         AgentReceiver.ResetSensors();
         AgentSignaller.ResetSensors();
 
@@ -497,8 +497,8 @@ double Fitness2(TVector<double> &genotype, RandomState &rs){
             // clamp the signallers position
             double pos = AgentSignaller.GetPosition();
             
-            if (pos > LANDMARKZONESTART){
-                AgentSignaller.SetPosition(LANDMARKZONESTART);
+            if (pos > LANDMARKZONESTART-5){
+                AgentSignaller.SetPosition(LANDMARKZONESTART-5);
             }
         }
 
@@ -542,8 +542,8 @@ double Fitness2(TVector<double> &genotype, RandomState &rs){
                     // clamp the signallers position
                     double pos = AgentSignaller.GetPosition();
                     
-                    if (pos > LANDMARKZONESTART){
-                        AgentSignaller.SetPosition(LANDMARKZONESTART);
+                    if (pos > LANDMARKZONESTART-5){
+                        AgentSignaller.SetPosition(LANDMARKZONESTART-5);
                     }
 
                     if (time > RunDuration+TransDuration){
@@ -624,8 +624,8 @@ double Fitness3(TVector<double> &genotype, RandomState &rs){
         AgentReceiver.ResetSensors();
 
         // Initialise the agent for this trial
-        double location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
-        AgentSignaller.SetPosition(location);
+        // double location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
+        AgentSignaller.SetPosition(0);
         AgentSignaller.ResetNeuralState();
         AgentSignaller.ResetSensors();
 
@@ -641,7 +641,7 @@ double Fitness3(TVector<double> &genotype, RandomState &rs){
         
         // Reset
         AgentReceiver.SetPosition(0);
-        AgentSignaller.SetPosition(location);
+        AgentSignaller.SetPosition(0);
         AgentReceiver.ResetSensors();
         AgentSignaller.ResetSensors();
 
@@ -663,8 +663,8 @@ double Fitness3(TVector<double> &genotype, RandomState &rs){
             // clamp the signallers position
             double pos = AgentSignaller.GetPosition();
             
-            if (pos > LANDMARKZONESTART){
-                AgentSignaller.SetPosition(LANDMARKZONESTART);
+            if (pos > LANDMARKZONESTART-5){
+                AgentSignaller.SetPosition(LANDMARKZONESTART-5);
             }
         }
 
@@ -678,7 +678,7 @@ double Fitness3(TVector<double> &genotype, RandomState &rs){
         for (double ref_var = -2.0; ref_var <= 2.0; ref_var += 2.0){
             for (double sep_var = -2.0; sep_var <= 2.0; sep_var += 2.0){
                 AgentReceiver.SetPosition(0);
-                AgentSignaller.SetPosition(location);
+                AgentSignaller.SetPosition(0);
                 AgentReceiver.ResetSensors();
                 AgentSignaller.ResetSensors();
 
@@ -713,8 +713,8 @@ double Fitness3(TVector<double> &genotype, RandomState &rs){
                     // clamp the signallers position
                     double pos = AgentSignaller.GetPosition();
                     
-                    if (pos > LANDMARKZONESTART){
-                        AgentSignaller.SetPosition(LANDMARKZONESTART);
+                    if (pos > LANDMARKZONESTART-5){
+                        AgentSignaller.SetPosition(LANDMARKZONESTART-5);
                     }
 
                     if (time > RunDuration+TransDuration){
@@ -831,8 +831,8 @@ double Fitness3_withRecord(TVector<double> &genotype, RandomState &rs){
         AgentReceiver.ResetSensors();
 
         // Initialise the agent for this trial
-        double location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
-        AgentSignaller.SetPosition(location);
+        // double location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
+        AgentSignaller.SetPosition(0);
         AgentSignaller.ResetNeuralState();
         AgentSignaller.ResetSensors();
 
@@ -858,7 +858,7 @@ double Fitness3_withRecord(TVector<double> &genotype, RandomState &rs){
         
         // Reset
         AgentReceiver.SetPosition(0);
-        AgentSignaller.SetPosition(location);
+        AgentSignaller.SetPosition(0);
         AgentReceiver.ResetSensors();
         AgentSignaller.ResetSensors();
 
@@ -880,8 +880,8 @@ double Fitness3_withRecord(TVector<double> &genotype, RandomState &rs){
             // clamp the signallers position
             double pos = AgentSignaller.GetPosition();
             
-            if (pos > LANDMARKZONESTART){
-                AgentSignaller.SetPosition(LANDMARKZONESTART);
+            if (pos > LANDMARKZONESTART-5){
+                AgentSignaller.SetPosition(LANDMARKZONESTART-5);
             }
 
             // record the timestep
@@ -907,7 +907,7 @@ double Fitness3_withRecord(TVector<double> &genotype, RandomState &rs){
         for (double ref_var = -2.0; ref_var <= 2.0; ref_var += 2.0){
             for (double sep_var = -2.0; sep_var <= 2.0; sep_var += 2.0){
                 AgentReceiver.SetPosition(0);
-                AgentSignaller.SetPosition(location);
+                AgentSignaller.SetPosition(0);
                 AgentReceiver.ResetSensors();
                 AgentSignaller.ResetSensors();
 
@@ -961,8 +961,8 @@ double Fitness3_withRecord(TVector<double> &genotype, RandomState &rs){
                     // clamp the signallers position
                     double pos = AgentSignaller.GetPosition();
                     
-                    if (pos > LANDMARKZONESTART){
-                        AgentSignaller.SetPosition(LANDMARKZONESTART);
+                    if (pos > LANDMARKZONESTART-5){
+                        AgentSignaller.SetPosition(LANDMARKZONESTART-5);
                     }
 
                     if (time > RunDuration+TransDuration){
@@ -1222,8 +1222,8 @@ double RecordBehavior(TSearch &s, RandomState &rs){
         AgentReceiver.ResetSensors();
 
         // Initialise the agent for this trial
-        double location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
-        AgentSignaller.SetPosition(location);
+        // double location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
+        AgentSignaller.SetPosition(0);
         AgentSignaller.ResetSensors();
         AgentReceiver.ResetNeuralState();
         AgentSignaller.ResetNeuralState();
@@ -1262,7 +1262,7 @@ double RecordBehavior(TSearch &s, RandomState &rs){
 
         // Reset
         AgentReceiver.SetPosition(0);
-        AgentSignaller.SetPosition(location);
+        AgentSignaller.SetPosition(0);
         AgentReceiver.ResetSensors();
         AgentSignaller.ResetSensors();
 
@@ -1295,8 +1295,8 @@ double RecordBehavior(TSearch &s, RandomState &rs){
             // clam the signallers position
             double pos = AgentSignaller.GetPosition();
             
-            if (pos > LANDMARKZONESTART){
-                AgentSignaller.SetPosition(LANDMARKZONESTART);
+            if (pos > LANDMARKZONESTART-5){
+                AgentSignaller.SetPosition(LANDMARKZONESTART-5);
             }
         
             SignallerBehaviorFile << AgentSignaller.GetPosition() << " ";
@@ -1328,7 +1328,7 @@ double RecordBehavior(TSearch &s, RandomState &rs){
             for (double sep_var = -2.0; sep_var <= 2.0; sep_var += 2.0){
                 // Reset
                 AgentReceiver.SetPosition(0);
-                AgentSignaller.SetPosition(location);
+                AgentSignaller.SetPosition(0);
                 AgentReceiver.ResetSensors();
                 AgentSignaller.ResetSensors();
 
@@ -1378,8 +1378,8 @@ double RecordBehavior(TSearch &s, RandomState &rs){
                     // clam the signallers position
                     double pos = AgentSignaller.GetPosition();
                     
-                    if (pos > LANDMARKZONESTART){
-                        AgentSignaller.SetPosition(LANDMARKZONESTART);
+                    if (pos > LANDMARKZONESTART-5){
+                        AgentSignaller.SetPosition(LANDMARKZONESTART-5);
                     }
                     
 
@@ -1697,10 +1697,9 @@ int main (int argc, const char* argv[])
     search.SetEvaluationFunction(Fitness3_withRecord);
     search.ExecuteSearch();
 
-
-    // if (search.BestPerformance() > 0.99) {
-    //     RecordBehavior(search, search.getRandomState());
-    // }
+    if (search.BestPerformance() > 0.99) {
+        RecordBehavior(search, search.getRandomState());
+    }
 
     #ifdef PRINTTOFILE
         file.close();
