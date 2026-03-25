@@ -959,7 +959,7 @@ void RecordBehavior(int gen, TVector<double>& genotype){
         ofstream LandmarkFile;
         ofstream NeuronS1, NeuronS2, NeuronS3;
         ofstream NeuronR1, NeuronR2, NeuronR3;
-        OpenFiles(env, s_gen, SignallerBehaviorFile, RecieverBehaviorFile, SignallerBehaviorFile2, RecieverBehaviorFile2,
+        OpenFiles(env, gen, SignallerBehaviorFile, RecieverBehaviorFile, SignallerBehaviorFile2, RecieverBehaviorFile2,
         Fitness, LandmarkFile, NeuronS1, NeuronS2, NeuronS3, NeuronR1, NeuronR2, NeuronR3);
 
         genLandmarks_Simple(0, 0, landmarkPositions);
