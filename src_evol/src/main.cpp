@@ -928,7 +928,13 @@ double Fitness3_withRecord(TVector<double> &genotype, RandomState &rs){
     return final_fitness;
 }
 
-void RecordBehavior(int gen, TVector<double>& genotype){
+void RecordBehavior(TSearch &s, RandomState &rs){
+    std::string current_run = s.CurrentRun();
+    std::string dir = s.Directory();
+
+    TVector<double> genotype;
+    genotype = s.BestIndividual();
+
     // Map genotype to phenotype
     TVector<double> phenotypeReceiver, phenotypeSignaller;
     CreatePhenotypes(genotype,phenotypeSignaller,phenotypeReceiver);
@@ -1285,9 +1291,11 @@ int main (int argc, const char* argv[])
     // Stage 3: Full Task - Hard
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(Fitness3);
-    search.SetBestActionFunction(RecordBehavior);
     search.ExecuteSearch();
 
+    if (search.BestPerformance() > 0.99) {
+        RecordBehavior(search, search.getRandomState());
+    }
 
     #ifdef PRINTTOFILE
         file.close();
