@@ -928,7 +928,7 @@ double Fitness3_withRecord(TVector<double> &genotype, RandomState &rs){
     return final_fitness;
 }
 
-void RecordBehavior(int Gen, TVector<double>& genotype){
+void RecordBehavior(int gen, TVector<double>& genotype){
     // Map genotype to phenotype
     TVector<double> phenotypeReceiver, phenotypeSignaller;
     CreatePhenotypes(genotype,phenotypeSignaller,phenotypeReceiver);
@@ -1277,12 +1277,12 @@ int main (int argc, const char* argv[])
     search.SetEvaluationFunction(Fitness1);
     search.ExecuteSearch();
 
-    // Stage 2: Full Task
+    // Stage 2: Full Task - Medium
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(Fitness2);
     search.ExecuteSearch();
 
-    // Stage 2: Full Task
+    // Stage 3: Full Task - Hard
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(Fitness3);
     search.SetBestActionFunction(RecordBehavior);
