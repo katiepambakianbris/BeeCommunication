@@ -330,7 +330,7 @@ double Fitness1(TVector<double> &genotype, RandomState &rs){
             // clamp the signallers position
             double pos = AgentSignaller.GetPosition();
             
-            if (pos > LANDMARKZONESTART){
+            if (pos > LANDMARKZONESTART-5){
                 AgentSignaller.SetPosition(LANDMARKZONESTART-5);
             }
         }
