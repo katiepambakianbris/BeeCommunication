@@ -358,24 +358,24 @@ void OpenFiles(int env, int gen,
     std::string s_env = std::to_string(env);
     std::string s_gen = std::to_string(gen);
     
-    SignallerBehaviorFile.open( dir + "behavior_Signaller_stage1_env_"+ s_env +"_" + s_gen + ".dat");
-    RecieverBehaviorFile.open( dir + "behavior_Reciever_stage1_env_"+ s_env +"_" + s_gen + ".dat");
+    SignallerBehaviorFile.open( dir + "behavior_Signaller_training_env_"+ s_env +"_" + s_gen + ".dat");
+    RecieverBehaviorFile.open( dir + "behavior_Reciever_training_env_"+ s_env +"_" + s_gen + ".dat");
     
-    SignallerBehaviorFile2.open( dir + "behavior_Signaller_stage2_env_"+ s_env +"_" + s_gen + ".dat");
-    RecieverBehaviorFile2.open( dir + "behavior_Reciever_stage2_env_"+ s_env +"_" + s_gen + ".dat");
+    SignallerBehaviorFile2.open( dir + "behavior_Signaller_testing_env_"+ s_env +"_" + s_gen + ".dat");
+    RecieverBehaviorFile2.open( dir + "behavior_Reciever_testing_env_"+ s_env +"_" + s_gen + ".dat");
 
     Fitness.open( dir + "fitness_env_"+ s_env +"_" + s_gen +".dat");
-    LandmarkFile.open(dir + "landmark_location_stage3_env_"+ s_env +"_"+s_gen+".dat");
+    LandmarkFile.open(dir + "landmark_location_env_"+ s_env +"_"+s_gen+".dat");
 
     // files to save the neuron state
     
-    NeuronS1.open(dir + "signaller_neuron1_stage3_env_"+ s_env +"_" +s_gen+".dat");
-    NeuronS2.open(dir + "signaller_neuron2_stage3_env_"+ s_env +"_" +s_gen+".dat");
-    NeuronS3.open(dir + "signaller_neuron3_stage3_env_"+ s_env +"_" +s_gen+".dat");
+    NeuronS1.open(dir + "signaller_neuron1_env_"+ s_env +"_" +s_gen+".dat");
+    NeuronS2.open(dir + "signaller_neuron2_env_"+ s_env +"_" +s_gen+".dat");
+    NeuronS3.open(dir + "signaller_neuron3_env_"+ s_env +"_" +s_gen+".dat");
     
-    NeuronR1.open(dir + "receiver_neuron1_stage3_env_"+ s_env +"_" +s_gen+".dat");
-    NeuronR2.open(dir + "receiver_neuron2_stage3_env_"+ s_env +"_" +s_gen+".dat");
-    NeuronR3.open(dir + "receiver_neuron3_stage3_env_"+ s_env +"_" +s_gen+".dat");
+    NeuronR1.open(dir + "receiver_neuron1_env_"+ s_env +"_" +s_gen+".dat");
+    NeuronR2.open(dir + "receiver_neuron2_env_"+ s_env +"_" +s_gen+".dat");
+    NeuronR3.open(dir + "receiver_neuron3_env_"+ s_env +"_" +s_gen+".dat");
 }
 
 
@@ -952,10 +952,8 @@ void RecordBehavior(TSearch &s, RandomState &rs){
     double total_fitness =0;
     double distance_food_receiver;
 
-    std::string s_gen = std::to_string(gen);
-
     ofstream TotalFitness;
-    TotalFitness.open( dir + "total_fitness_" + s_gen +".dat");
+    TotalFitness.open( dir + "total_fitness_" + current_run +".dat");
 
     for (int env =1; env<=LN;env++){
         std::string s_env = std::to_string(env);
@@ -965,7 +963,7 @@ void RecordBehavior(TSearch &s, RandomState &rs){
         ofstream LandmarkFile;
         ofstream NeuronS1, NeuronS2, NeuronS3;
         ofstream NeuronR1, NeuronR2, NeuronR3;
-        OpenFiles(env, gen, SignallerBehaviorFile, RecieverBehaviorFile, SignallerBehaviorFile2, RecieverBehaviorFile2,
+        OpenFiles(env, 0, SignallerBehaviorFile, RecieverBehaviorFile, SignallerBehaviorFile2, RecieverBehaviorFile2,
         Fitness, LandmarkFile, NeuronS1, NeuronS2, NeuronS3, NeuronR1, NeuronR2, NeuronR3);
 
         genLandmarks_Simple(0, 0, landmarkPositions);
