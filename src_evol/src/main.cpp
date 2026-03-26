@@ -360,7 +360,11 @@ void OpenFiles(int env, int gen,
     
     SignallerBehaviorFile.open( dir + "behavior_Signaller_training_env_"+ s_env +"_" + s_gen + ".dat");
     RecieverBehaviorFile.open( dir + "behavior_Reciever_training_env_"+ s_env +"_" + s_gen + ".dat");
+    SignallerBehaviorFile.open( dir + "behavior_Signaller_training_env_"+ s_env +"_" + s_gen + ".dat");
+    RecieverBehaviorFile.open( dir + "behavior_Reciever_training_env_"+ s_env +"_" + s_gen + ".dat");
     
+    SignallerBehaviorFile2.open( dir + "behavior_Signaller_testing_env_"+ s_env +"_" + s_gen + ".dat");
+    RecieverBehaviorFile2.open( dir + "behavior_Reciever_testing_env_"+ s_env +"_" + s_gen + ".dat");
     SignallerBehaviorFile2.open( dir + "behavior_Signaller_testing_env_"+ s_env +"_" + s_gen + ".dat");
     RecieverBehaviorFile2.open( dir + "behavior_Reciever_testing_env_"+ s_env +"_" + s_gen + ".dat");
 
@@ -1069,7 +1073,13 @@ double TestingStage(TVector<double> &genotype, RandomState &rs){
     return final_fitness;
 }
 
-void RecordBehavior(int gen, TVector<double>& genotype){
+void RecordBehavior(TSearch &s, RandomState &rs){
+    std::string current_run = s.CurrentRun();
+    std::string dir = s.Directory();
+
+    TVector<double> genotype;
+    genotype = s.BestIndividual();
+
     // Map genotype to phenotype
     TVector<double> phenotypeReceiver, phenotypeSignaller;
     CreatePhenotypes(genotype,phenotypeSignaller,phenotypeReceiver);
@@ -1087,10 +1097,8 @@ void RecordBehavior(int gen, TVector<double>& genotype){
     double total_fitness =0;
     double distance_food_receiver;
 
-    std::string s_gen = std::to_string(gen);
-
     ofstream TotalFitness;
-    TotalFitness.open( dir + "total_fitness_" + s_gen +".dat");
+    TotalFitness.open( dir + "total_fitness_" + current_run +".dat");
 
     for (int env =1; env<=LN;env++){
         std::string s_env = std::to_string(env);
@@ -1100,7 +1108,7 @@ void RecordBehavior(int gen, TVector<double>& genotype){
         ofstream LandmarkFile;
         ofstream NeuronS1, NeuronS2, NeuronS3;
         ofstream NeuronR1, NeuronR2, NeuronR3;
-        OpenFiles(env, gen, SignallerBehaviorFile, RecieverBehaviorFile, SignallerBehaviorFile2, RecieverBehaviorFile2,
+        OpenFiles(env, 0, SignallerBehaviorFile, RecieverBehaviorFile, SignallerBehaviorFile2, RecieverBehaviorFile2,
         Fitness, LandmarkFile, NeuronS1, NeuronS2, NeuronS3, NeuronR1, NeuronR2, NeuronR3);
 
         genLandmarks_Simple(0, 0, landmarkPositions);
@@ -1426,13 +1434,11 @@ int main (int argc, const char* argv[])
     // Stage 3: Full Task - Hard
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(Fitness3);
-    search.SetBestActionFunction(RecordBehavior);
     search.ExecuteSearch();
 
     // Stage 3: Full Task - with lots of crossover
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(TestingStage);
-    search.SetBestActionFunction(RecordBehavior);
     search.ExecuteSearch();
 
     #ifdef PRINTTOFILE
