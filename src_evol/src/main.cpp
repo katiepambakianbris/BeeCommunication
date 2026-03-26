@@ -12,9 +12,6 @@
 
 #define PRINTTOFILE
 
-// Flag
-int record = 0;
-
 // Task params
 const int LN = 3;                   // Number of landmarks in the environment
 const double StepSize = 0.1;
@@ -360,11 +357,7 @@ void OpenFiles(int env, int gen,
     
     SignallerBehaviorFile.open( dir + "behavior_Signaller_training_env_"+ s_env +"_" + s_gen + ".dat");
     RecieverBehaviorFile.open( dir + "behavior_Reciever_training_env_"+ s_env +"_" + s_gen + ".dat");
-    SignallerBehaviorFile.open( dir + "behavior_Signaller_training_env_"+ s_env +"_" + s_gen + ".dat");
-    RecieverBehaviorFile.open( dir + "behavior_Reciever_training_env_"+ s_env +"_" + s_gen + ".dat");
     
-    SignallerBehaviorFile2.open( dir + "behavior_Signaller_testing_env_"+ s_env +"_" + s_gen + ".dat");
-    RecieverBehaviorFile2.open( dir + "behavior_Reciever_testing_env_"+ s_env +"_" + s_gen + ".dat");
     SignallerBehaviorFile2.open( dir + "behavior_Signaller_testing_env_"+ s_env +"_" + s_gen + ".dat");
     RecieverBehaviorFile2.open( dir + "behavior_Reciever_testing_env_"+ s_env +"_" + s_gen + ".dat");
 
@@ -488,8 +481,8 @@ double FitnessFunction(TVector<double> &genotype, RandomState &rs, double start,
         SaveNeuralState(AgentReceiver, savedStateReceiver);
         SaveNeuralState(AgentSignaller, savedStateSignaller);
 
-        for (double ref_var = 0.0; ref_var <= 0.0; ref_var += 1.0){
-            for (double sep_var = 0.0; sep_var <= 0.0; sep_var += 1.0){
+        for (double ref_var = start; ref_var <= end; ref_var += step){
+            for (double sep_var = start; sep_var <= end; sep_var += step){
                 genLandmarks_Simple(ref_var, sep_var, landmarkPositions);
                 food_location = landmarkPositions[env];
 
@@ -613,6 +606,16 @@ void RecordResults(
         // write each trial (testing phase)
         for (int t = 0; t < 9; t++){
             TrialData &td = all_trials[env][t];
+            // clear previous contents before recording a new trial
+            td.signaller_pos.clear();
+            td.receiver_pos.clear();
+            td.neuron_s1.clear();
+            td.neuron_s2.clear();
+            td.neuron_s3.clear();
+            td.neuron_r1.clear();
+            td.neuron_r2.clear();
+            td.neuron_r3.clear();
+            td.fitness_over_time.clear();
 
             // landmark file
             for (double lp : td.landmark_positions) LandmarkFile2 << lp << " ";
@@ -765,6 +768,16 @@ double Fitness3_withRecord(TVector<double> &genotype, RandomState &rs){
                 double totalScore = 0.0;
 
                 TrialData &td = all_trials[env][trial_num];
+                // clear previous contents before recording a new trial
+                td.signaller_pos.clear();
+                td.receiver_pos.clear();
+                td.neuron_s1.clear();
+                td.neuron_s2.clear();
+                td.neuron_s3.clear();
+                td.neuron_r1.clear();
+                td.neuron_r2.clear();
+                td.neuron_r3.clear();
+                td.fitness_over_time.clear();
 
                 td.food_location = food_location;
                 td.landmark_positions.clear();
@@ -790,7 +803,7 @@ double Fitness3_withRecord(TVector<double> &genotype, RandomState &rs){
                         distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
 
                         // if the distance is within a threshold set the score to be perfect
-                        if (distance_food_receiver < 1 && time > HarshDuration+TransDuration+RunDuration){
+                        if (distance_food_receiver < hardDurationMinDist && time > HarshDuration+TransDuration+RunDuration){
                             distance_food_receiver = 0;
                         } else if (distance_food_receiver < mindist){
                             distance_food_receiver = 0;
@@ -973,6 +986,16 @@ double TestingStage(TVector<double> &genotype, RandomState &rs){
                 double totalScore = 0.0;
 
                 TrialData &td = all_trials[env][trial_num];
+                // clear previous contents before recording a new trial
+                td.signaller_pos.clear();
+                td.receiver_pos.clear();
+                td.neuron_s1.clear();
+                td.neuron_s2.clear();
+                td.neuron_s3.clear();
+                td.neuron_r1.clear();
+                td.neuron_r2.clear();
+                td.neuron_r3.clear();
+                td.fitness_over_time.clear();
 
                 td.food_location = food_location;
                 td.landmark_positions.clear();
@@ -998,7 +1021,7 @@ double TestingStage(TVector<double> &genotype, RandomState &rs){
                         distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
 
                         // if the distance is within a threshold set the score to be perfect
-                        if (distance_food_receiver < 1 && time > HarshDuration+TransDuration+RunDuration){
+                        if (distance_food_receiver < hardDurationMinDist && time > HarshDuration+TransDuration+RunDuration){
                             distance_food_receiver = 0;
                         } else if (distance_food_receiver < mindist){
                             distance_food_receiver = 0;
@@ -1414,8 +1437,6 @@ int main (int argc, const char* argv[])
     
     /* Evolve */
 
-    record = 0;
-
     // Stage 0: Evolve the Signaller
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(signaller_to_food);
@@ -1436,7 +1457,7 @@ int main (int argc, const char* argv[])
     search.SetEvaluationFunction(Fitness3);
     search.ExecuteSearch();
 
-    // Stage 3: Full Task - with lots of crossover
+    // Stage 4: Full Task - with lots of crossover
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(TestingStage);
     search.ExecuteSearch();
