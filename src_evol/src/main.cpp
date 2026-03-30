@@ -634,6 +634,143 @@ double FitnessFunction4(TVector<double> &genotype, RandomState &rs)
     return totalfit / totaltrials;
 }
 
+// *****************************
+// Time Delay
+// between testing and training
+// *****************************
+double FitnessFunctionTest(TVector<double> &genotype, RandomState &rs)
+{
+    // Map genotype to phenotype
+    TVector<double> phenotypeS;
+    phenotypeS.SetBounds(1, (int)(VectSize));
+    GenPhenMapping(genotype, phenotypeS, 1);
+
+    // construct the signaller agent
+    CountingAgent Agent(N, phenotypeS);
+
+    // Save state
+    TVector<double> saved_state;
+    saved_state.SetBounds(1,N);
+
+    // Keep track of performance (fitness across landmarks/env)
+    double totaltrials = 0;
+    double totaltime;
+    double dist;
+    double totaldist;
+    double totalfit = 0.0;
+    double food_loc, food_loc_mod;
+    double fit;
+
+    // ************************
+    // Set up Landmarks
+    // ************************
+
+    TVector<double> landmarkPositions;
+    landmarkPositions.SetBounds(1,LN);  // [30, 45, 60..]
+    for (int i = 1; i <= LN; i += 1)
+    {
+        landmarkPositions[i] = REF + (i * SEP);
+    }
+
+    TVector<double> landmarkPositionTest;
+    landmarkPositionTest.SetBounds(1,LN);  
+
+
+    // loop through different enviornment 
+    // for each enviornment i, landmark i has the food 
+    for (int env = 1; env <= LN; env += 1)
+    {
+            // Step 1: Setup
+            // Establish food location
+            food_loc = landmarkPositions[env];
+        
+            // reset position + neural state of the signaller
+            Agent.ResetPosition(0);
+            Agent.ResetSensors();
+            Agent.ResetNeuralState();
+
+            // Step 2: Training Phase
+            for (double time = 0; time < RunDuration; time += StepSize)
+            {
+                Agent.SenseFood(food_loc);
+                Agent.SenseLandmarks(LN,landmarkPositions);
+                Agent.Step(StepSize);
+            }
+
+            // Saved each of their neural states 
+            for (int i = 1; i <= N; i++)
+            {
+                saved_state[i] = Agent.NervousSystem.NeuronState(i);
+            }
+            
+            // 3. Testing Phase
+            for (int delay=0; delay<=10; delay +=5){
+                for (double ref_var = -2.0; ref_var <= 2.0; ref_var += 2.0)
+                {
+                    for (double sep_var = -2.0; sep_var <= 2.0; sep_var += 2.0)
+                    {
+                        genLandmarks_LeapFrog(rs, landmarkPositionTest);
+                        // // arrange the landmarks in position  
+                        // for (int i = 1; i <= LN; i += 1)
+                        // {
+                        //     landmarkPositionTest[i] = (REF + ref_var) + (i * (SEP + sep_var));
+                        // }
+                        food_loc_mod = landmarkPositionTest[env];
+
+                        // Setup
+                        Agent.ResetPosition(0);
+                        Agent.ResetSensors();
+                        for (int i = 1; i <= N; i++)
+                        {
+                            Agent.NervousSystem.SetNeuronState(i, saved_state[i]);
+                        }
+
+                        // 2. delay
+                        for (double time=0; time < delay; time += StepSize){
+                            // not sure if it should step or not
+                            Agent.Step(StepSize);
+                        }
+                        
+                        Agent.ResetPosition(0); 
+                        Agent.ResetSensors();
+                        
+                        totaldist = 0.0;
+                        totaltime = 0.0;
+                            
+                        // run the trial
+                        for (double time = 0; time < RunDuration; time += StepSize)
+                        {
+                            Agent.SenseLandmarks(LN,landmarkPositionTest);
+                            Agent.Step(StepSize);
+
+                            // Measure distance between them (after transients)
+                            if (time > TransDuration)
+                            {
+                                dist = fabs(Agent.pos - food_loc_mod);
+                                
+                                if (dist < mindist){
+                                    dist = 0.0;
+                                }
+                                totaldist += dist;
+
+                                totaltime += 1;
+                            }
+                        }
+
+                        fit = 1 - ((totaldist / totaltime)/MinLength);
+                        if (fit < 0.0){
+                            fit = 0.0;
+                        }
+                        totalfit += fit;
+
+                        totaltrials += 1;
+                    }
+                }
+            }
+    }
+    return totalfit / totaltrials;
+}
+
 double RecordBehavior1(TSearch &s) {
     std::string current_run = s.CurrentRun();
     std::string dir = s.Directory();
@@ -1710,32 +1847,24 @@ int main (int argc, const char* argv[])
     search.SetEvaluationFunction(FitnessFunction1);
     search.ExecuteSearch();
 
-    if (search.BestPerformance() > 0.99) {
-        RecordBehavior1(search);
-    }
     
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(FitnessFunction2);
     search.ExecuteSearch();
 
-    if (search.BestPerformance() > 0.99) {
-        RecordBehavior2(search);
-    }
 
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(FitnessFunction3);
     search.ExecuteSearch();
-        if (search.BestPerformance() > 0.99) {
-        RecordBehavior3(search);
-    }
 
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(FitnessFunction4);
     search.ExecuteSearch();
 
-    if (search.BestPerformance() > 0.99) {
-        RecordBehavior4(search);
-    }
+    search.SetSearchTerminationFunction(TerminationFunction);
+    search.SetEvaluationFunction(FitnessFunctionTest);
+    search.ExecuteSearch();
+
 
     if (search.BestPerformance() > 0.99){
         RecordBehaviorTest(search, search.getRandomState());
