@@ -104,6 +104,7 @@ TVector<double> genLandmarks_LeapFrog(RandomState &rs, TVector<double> &landmark
     double lenLandmarkZone = LANDMARKZONEEND - LANDMARKZONESTART;
     double maxSpacing = lenLandmarkZone / (double)(LN+1);
     // allow there to be a 20% variation in the landmarks position -> this could be increased
+    // value between 0 and 1
     double variation = 0.0;
     // generate the spaceing using this variation
     double spacing = maxSpacing * (1.0 + rs.UniformRandom(-variation, variation));
