@@ -44,7 +44,9 @@ double SEP = 15;
 
 const int LANDMARKZONESTART = 10;
 const int LANDMARKZONEEND = LN * 10 + LANDMARKZONESTART;
-const double ArenaLength = LANDMARKZONEEND - 0;  
+const double ArenaLength = LANDMARKZONEEND - 0; 
+
+double VARIATION = 0.0;
 
 // ------------------------------------
 // Genotype-Phenotype Mapping Functions
@@ -104,9 +106,8 @@ TVector<double> genLandmarks_LeapFrog(RandomState &rs, TVector<double> &landmark
     double lenLandmarkZone = LANDMARKZONEEND - LANDMARKZONESTART;
     double maxSpacing = lenLandmarkZone / (double)(LN+1);
     // allow there to be a 20% variation in the landmarks position -> this could be increased
-    double variation = 0.0;
     // generate the spaceing using this variation
-    double spacing = maxSpacing * (1.0 + rs.UniformRandom(-variation, variation));
+    double spacing = maxSpacing * (1.0 + rs.UniformRandom(-VARIATION, VARIATION));
 
     double total_width = (LN-1) * spacing;
 
@@ -1762,6 +1763,7 @@ void output_config(std::string dir, std::string run, std::string batch){
             << "Sep " << SEP << "\n"
             << "Ref " << REF << "\n"
             << "\n"
+            << "Variation" << VARIATION << "\n"
             ;
     configfile.close();
 }
@@ -1795,6 +1797,11 @@ int main (int argc, const char* argv[])
     // there is not acutally an error here
     std::filesystem::create_directories(dir);
 
+    // work out the variation from the batch number
+    double variations[] = {0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45};
+
+    int index = std::stoi(batch_number) % 10;
+    VARIATION = variations[index];
     // print to the config file
     output_config(dir, current_run, batch_number);
     
