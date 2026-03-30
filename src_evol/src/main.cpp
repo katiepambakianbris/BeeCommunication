@@ -1437,25 +1437,35 @@ int main (int argc, const char* argv[])
     
     /* Evolve */
 
+    cout << "Starting phase 0" << endl;
+
     // Stage 0: Evolve the Signaller
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(signaller_to_food);
     search.ExecuteSearch();
+
+    cout << "Starting phase 1" << endl;
 
     // Stage 1: A Slightly Easier task (simpler landmark generation)
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(Fitness1);
     search.ExecuteSearch();
 
+    cout << "Starting phase 2"<< endl;
+
     // Stage 2: Full Task - Medium
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(Fitness2);
     search.ExecuteSearch();
 
+    cout << "Starting phase 3"<< endl;
+
     // Stage 3: Full Task - Hard
     search.SetSearchTerminationFunction(TerminationFunction);
     search.SetEvaluationFunction(Fitness3);
     search.ExecuteSearch();
+
+    cout << "Starting testing phase"<< endl;
 
     // Stage 4: Full Task - with lots of crossover
     search.SetSearchTerminationFunction(TerminationFunction);
