@@ -57,6 +57,8 @@ const double hardDurationMinDist = 1;
 
 int call_count = 0;
 
+double SignallersLocation;
+
 std::string dir;
 
 struct TrialData{
@@ -767,6 +769,17 @@ double Fitness3(TVector<double> &genotype, RandomState &rs){
     debugfile << endl;
     debugfile.close();
 
+    if (final_fitness > 0.99){
+        ofstream genFile;
+        std::string file_name = dir + "fitness3_good_generations.dat";
+        genFile.open(file_name, std::ios::app);
+        genFile << "call=" << call_count
+                << " fitness=" << final_fitness
+                << " genotype=" << genotype
+                << endl;
+        genFile.close();
+    }
+
     return final_fitness;
 }
 
@@ -1155,6 +1168,13 @@ double RecordBehavior(TSearch &s, RandomState &rs){
     // Map genotype to phenotype
     TVector<double> genotype;
     genotype = s.BestIndividual();
+
+    ofstream genFile;
+    std::string file_name = dir + "record_genotype.dat";
+    genFile.open(file_name, std::ios::app);
+    genFile << genotype
+            << endl;
+    genFile.close();
 
     // Map genotype to phenotype
     TVector<double> phenotypeReceiver, phenotypeSignaller;
