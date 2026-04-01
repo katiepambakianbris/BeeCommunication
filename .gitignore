@@ -6,3 +6,4 @@ bin/
 build/
 .venv
 results/
+analysis/
