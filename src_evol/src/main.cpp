@@ -1907,7 +1907,7 @@ double RecordBehavior2(TSearch &s, RandomState &rs){
 
         // ******* TESTING *********
 
-        for (double trial = 0; trial <= positions.size(); trial += 1){
+        for (int trial = 0; trial < positions.size(); trial ++){
             // Reset
             AgentReceiver.SetPosition(0);
             AgentSignaller.SetPosition(0);
@@ -2284,7 +2284,7 @@ int main (int argc, const char* argv[])
     search.ExecuteSearch();
 
     if (search.BestPerformance() > 0.99) {
-        RecordBehavior(search, search.getRandomState());
+        RecordBehavior2(search, search.getRandomState());
     }
 
     #ifdef PRINTTOFILE
