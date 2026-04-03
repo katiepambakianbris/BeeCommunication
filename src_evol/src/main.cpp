@@ -1170,17 +1170,12 @@ double Fitness4(TVector<double> &genotype, RandomState &rs){
     savedStateSignaller.SetBounds(1,N); 
     savedStateReceiver.SetBounds(1, N);
 
-
-    std::vector<vector<double>> positions= {
-        {15, 20, 25},
-        {20, 25, 35},
+    std::vector<std::vector<double>> positions = {
+        {15, 25, 35},
         {15, 30, 45},
-        {20, 25, 30},
+        {20, 25, 30}
         {20, 30, 40},
         {20, 35, 50},
-        {25, 30, 35},
-        {25, 35, 45},
-        {25, 40, 55}
     };
 
     // Landmark Positions (last column removed)
@@ -1266,7 +1261,7 @@ double Fitness4(TVector<double> &genotype, RandomState &rs){
             savedStateSignaller[i] = AgentSignaller.NervousSystem.NeuronState(i);
         }
 
-        for (double trial = 0; trial <= positions.size(); trial += 1){
+        for (double trial = 0; trial < positions.size(); trial += 1){
             AgentReceiver.SetPosition(0);
             AgentSignaller.SetPosition(0);
             AgentReceiver.ResetSensors();
@@ -1740,16 +1735,12 @@ double RecordBehavior2(TSearch &s, RandomState &rs){
     savedStateReceiverTester.SetBounds(1,N);
 
     // **** Generate landmarks (using leapfrog method) ****
-    std::vector<vector<double>> positions= {
-        {15, 20, 25},
-        {20, 25, 35},
+    std::vector<std::vector<double>> positions = {
+        {15, 25, 35},
         {15, 30, 45},
-        {20, 25, 30},
+        {20, 25, 30}
         {20, 30, 40},
         {20, 35, 50},
-        {25, 30, 35},
-        {25, 35, 45},
-        {25, 40, 55}
     };
 
     // Landmark Positions (last column removed)
