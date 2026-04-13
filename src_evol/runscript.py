@@ -6,6 +6,7 @@
 # running command
 # python3 runscript.py 0 1 0 0 bin/main
 
+
 import os
 import sys
 

@@ -408,6 +408,7 @@ void Test1(TVector<double>& genotype, int current_run){
     NeuronR1.close();
     NeuronR2.close();
     NeuronR3.close();
+    FinalFitness.close();
 }
 
 // Fixed spacing, varying the start location
@@ -468,7 +469,7 @@ void Test2(TVector<double>& genotype, int current_run){
 
 
     // set the food to be at the ith landmark location
-    food_location = landmarkPositions[2];
+    food_location = landmarkPositions[1];
     for (int x = 1; x<= LN; x += 1){
         LandmarkFile << landmarkPositions[x] << " ";
     }
@@ -534,7 +535,7 @@ void Test2(TVector<double>& genotype, int current_run){
 
     // ******* TESTING *********
 
-    for (double ref_var = 0.0; ref_var <= 20.0; ref_var += 1.0){
+    for (double ref_var = 0.0; ref_var <= 40.0; ref_var += 1.0){
         // Reset
         AgentReceiver.SetPosition(0);
         AgentSignaller.SetPosition(0);
@@ -542,11 +543,11 @@ void Test2(TVector<double>& genotype, int current_run){
         AgentSignaller.ResetSensors();
 
         for (int x = 1; x<= LN; x += 1){
-            landmarkPositions[x] = (10 + ref_var) + (x-1)*10;
+            landmarkPositions[x] = (ref_var) + (x-1)*10;
         }
         
         
-        food_location = landmarkPositions[2];
+        food_location = landmarkPositions[1];
 
         LandmarkFile << ref_var << " ";
         for (int x = 1; x<= LN; x += 1){
@@ -671,6 +672,7 @@ void Test2(TVector<double>& genotype, int current_run){
     NeuronR1.close();
     NeuronR2.close();
     NeuronR3.close();
+    FinalFitness.close();
 }
 
 // 
@@ -804,10 +806,10 @@ void Test3(TVector<double>& genotype, int current_run){
             AgentSignaller.SetPosition(0);
             AgentReceiver.ResetSensors();
             AgentSignaller.ResetSensors();
+
             for (int x = 1; x<= LN; x += 1){
                 landmarkPositions[x] = (10 + ref_var) + (x-1)*spacing;
             }
-            
             
             food_location = landmarkPositions[2];
 
@@ -829,6 +831,7 @@ void Test3(TVector<double>& genotype, int current_run){
             // record the initial position
             SignallerBehaviorFile << AgentSignaller.GetPosition() << " ";
             RecieverBehaviorFile << AgentReceiver.GetPosition() << " ";
+
             NeuronS1 << AgentSignaller.NervousSystem.NeuronState(1) << " ";
             NeuronS2 << AgentSignaller.NervousSystem.NeuronState(2) << " ";
             NeuronS3 << AgentSignaller.NervousSystem.NeuronState(3) << " ";
@@ -935,6 +938,7 @@ void Test3(TVector<double>& genotype, int current_run){
     NeuronR1.close();
     NeuronR2.close();
     NeuronR3.close();
+    FinalFitness.close();
 }
 
 // ================================================
@@ -1040,7 +1044,7 @@ int main (int argc, const char* argv[])
     // ######################
     // Setup
     // ######################
-    // check that argv[1] has been provided
+    // check that argv[1] has been provided6
     if (argc < 4){
         // send an error message to the terminal
         std::cerr << "Error: missing run or array index number.\n";
@@ -1052,8 +1056,8 @@ int main (int argc, const char* argv[])
 
     // Define output home directory
     int v = 0;
-    std::string result_dir = "/user/work/yj23812/BeeCommunication/results/"+ date_as_string() +"/" + slurm_job_id;
-    // std::string result_dir = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/"+ date_as_string() +"/v";
+    // std::string result_dir = "/user/work/yj23812/BeeCommunication/results/"+ date_as_string() +"/" + slurm_job_id;
+    std::string result_dir = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/"+ date_as_string() +"/5";
 
     // make the genotypes into TVector
     dir = result_dir +"/batch_"+ batch_number +"/network_"+ std::to_string(1) +"/";
@@ -1072,9 +1076,9 @@ int main (int argc, const char* argv[])
         0.895011, 0.334062, -0.301657, -0.314407, 1.0, -0.344882
     );
 
-    Test1(genotype_tvector1, 1);
+    // Test1(genotype_tvector1, 1);
     Test2(genotype_tvector1, 1);
-    Test3(genotype_tvector1, 1);
+    // Test3(genotype_tvector1, 1);
 
     // make the genotypes into TVector
     dir = result_dir +"/batch_"+ batch_number +"/network_"+ std::to_string(2) +"/";
@@ -1093,9 +1097,9 @@ int main (int argc, const char* argv[])
         0.846889, 0.579995, -0.904701, -1.0, -0.716707, -0.562514
     );
 
-    Test1(genotype_tvector1, 2);
-    Test2(genotype_tvector1, 2);
-    Test3(genotype_tvector1, 2);
+    // Test1(genotype_tvector2, 2);
+    Test2(genotype_tvector2, 2);
+    // Test3(genotype_tvector2, 2);
 
     // make the genotypes into TVector
     dir = result_dir +"/batch_"+ batch_number +"/network_"+ std::to_string(3) +"/";
@@ -1114,9 +1118,9 @@ int main (int argc, const char* argv[])
         0.302903, 0.251184, -0.58741, 0.172916, 0.678134, -0.158857
     );
 
-    Test1(genotype_tvector1, 3);
-    Test2(genotype_tvector1, 3);
-    Test3(genotype_tvector1, 3);
+    // Test1(genotype_tvector3, 3);
+    Test2(genotype_tvector3, 3);
+    // Test3(genotype_tvector3, 3);
 
     // make the genotypes into TVector
     dir = result_dir +"/batch_"+ batch_number +"/network_"+ std::to_string(4) +"/";
@@ -1135,9 +1139,9 @@ int main (int argc, const char* argv[])
         0.530354, -0.937995, 0.192227, -0.6636, -0.00512722, -0.825049
     );
 
-    Test1(genotype_tvector1, 4);
-    Test2(genotype_tvector1, 4);
-    Test3(genotype_tvector1, 4);
+    // Test1(genotype_tvector4, 4);
+    Test2(genotype_tvector4, 4);
+    // Test3(genotype_tvector4, 4);
 
     return 0;
 }
