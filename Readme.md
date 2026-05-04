@@ -66,9 +66,15 @@ z is the index of the array and k is the index of the run
 
 reproduction - The original counting task (including extension)
 
-referential counting task:
+referential counting task: 
+
+
 mode3-v1 - the single agent going to the food with a fixed input
+
 simple - the simple referential communicaiton task with simple agents
+
 mode3-v3 - the simple referential communication task with the full agents
+
 mode3-v5 - th full referential communication task 
+
 testing - used to perform the generalisation assessments on the four selected networks
