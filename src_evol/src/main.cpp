@@ -151,6 +151,270 @@ TVector<double> genLandmarks_Simple(double start_var, double space_var, TVector<
     return landmarkPositions;
 }
 
+void SignallerBehaviourTest(TVector<double>& genotype, int current_run){
+    double food_location;
+    double distance_food_receiver;
+    // **** create the receiver ****
+    // Map genotype to phenotype
+
+    // Map genotype to phenotype
+    TVector<double> phenotypeReceiver, phenotypeSignaller;
+    phenotypeReceiver.SetBounds(1, (int)(VectSize/2));
+    phenotypeSignaller.SetBounds(1, (int)(VectSize/2));
+    GenPhenMapping(genotype, phenotypeSignaller, 1);
+    GenPhenMapping(genotype, phenotypeReceiver, (int)(N*N + 5*N +1));
+    CountingAgent AgentSignaller(N, phenotypeSignaller);
+    CountingAgent AgentReceiver(N, phenotypeReceiver);
+
+    // save this state
+    // Save state
+    TVector<double> savedStateSignaller, savedStateReceiver;
+    savedStateSignaller.SetBounds(1,N);
+    savedStateReceiver.SetBounds(1,N);
+
+    // **** Generate landmarks (using leapfrog method) ****
+
+    std::vector<double> positions = {20.0,30.0,40.0};
+
+    TVector<double> landmarkPositions;
+    landmarkPositions.SetBounds(1,LN);
+    for (int x = 1; x<= LN; x += 1){
+        landmarkPositions[x] = positions[x-1];
+    }
+
+    // **** create the files to save the behaviour/env ***
+    // the stages are separated into three files
+    ofstream SignallerBehaviorFile, RecieverBehaviorFile;
+    SignallerBehaviorFile.open( dir + "behavior_Signaller_signallerbehaviourtest_" + std::to_string(current_run) + ".dat");
+    RecieverBehaviorFile.open( dir + "behavior_Reciever_signallerbehaviourtest_" + std::to_string(current_run) + ".dat");
+    ofstream Stage3Fitness, FinalFitness;
+    Stage3Fitness.open( dir + "fitness_signallerbehaviourtest_" + std::to_string(current_run) +".dat");
+    FinalFitness.open( dir + "final_fitness_signallerbehaviourtest_" + std::to_string(current_run) +".dat");
+
+    // stores the location of the landmarks and the food -> this is each line 
+    ofstream LandmarkFile;
+    LandmarkFile.open(dir + "landmark_location_signallerbehaviourtest_"+std::to_string(current_run)+".dat");
+
+    // files to save the neuron state
+    ofstream NeuronS1, NeuronS2, NeuronS3;
+    NeuronS1.open(dir + "signaller_neuron1_signallerbehaviourtest_" + std::to_string(current_run)+".dat");
+    NeuronS2.open(dir + "signaller_neuron2_signallerbehaviourtest_" + std::to_string(current_run)+".dat");
+    NeuronS3.open(dir + "signaller_neuron3_signallerbehaviourtest_" + std::to_string(current_run)+".dat");
+    ofstream NeuronR1, NeuronR2, NeuronR3;
+    NeuronR1.open(dir + "receiver_neuron1_signallerbehaviourtest_" + std::to_string(current_run)+".dat");
+    NeuronR2.open(dir + "receiver_neuron2_signallerbehaviourtest_" + std::to_string(current_run)+".dat");
+    NeuronR3.open(dir + "receiver_neuron3_signallerbehaviourtest_" + std::to_string(current_run)+".dat");
+
+    for (int env =1; env<=LN;env++){
+        // set the food to be at the ith landmark location
+        genLandmarks_Simple(0, 0, landmarkPositions);
+        food_location = landmarkPositions[env];
+        // for (int x = 1; x<= LN; x += 1){
+        //     LandmarkFile << landmarkPositions[x] << " ";
+        // }
+        // LandmarkFile << food_location << " ";
+        // LandmarkFile << endl;
+        
+        // Initialise the agent for this trial
+        AgentReceiver.SetPosition(0);
+        AgentReceiver.ResetSensors();
+        // Initialise the agent for this trial
+        // double location = rs.UniformRandom(SIGNALLERSTART,SIGNALLEREND);
+        AgentSignaller.SetPosition(0);
+        AgentSignaller.ResetSensors();
+        AgentReceiver.ResetNeuralState();
+        AgentSignaller.ResetNeuralState();
+        // ********* PHASE 1 ************
+
+        for (double time=0; time < RunDuration; time += StepSize){
+            // only let the Signaller move
+            AgentSignaller.SenseFood(food_location);
+            AgentSignaller.SenseLandmarks(LN, landmarkPositions);
+            AgentSignaller.SenseOther(AgentReceiver.GetPosition());
+            AgentSignaller.Step(StepSize);
+        }
+
+        // Reset
+        AgentReceiver.SetPosition(0);
+        AgentSignaller.SetPosition(0);
+        AgentReceiver.ResetSensors();
+        AgentSignaller.ResetSensors();
+
+        // ********* PHASE 2/3 ************
+        for (double time=0; time < RunDuration*2; time += StepSize){
+            
+            AgentReceiver.SenseOther(AgentSignaller.GetPosition());
+            AgentSignaller.SenseOther(AgentReceiver.GetPosition());
+
+            AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+
+            AgentSignaller.SenseFood(food_location);
+
+            // Move both the agents
+            AgentReceiver.Step(StepSize);
+            // AgentReceiver.SetPosition(0);
+            AgentSignaller.Step(StepSize);
+
+            // clam the signallers position
+            double pos = AgentSignaller.GetPosition();
+            
+            if (pos > LANDMARKZONESTART){
+                AgentSignaller.SetPosition(LANDMARKZONESTART);
+            }
+        }
+
+        // Saved each of their neural states 
+        for (int i = 1; i <= N; i++)
+        {
+            savedStateSignaller[i] = AgentSignaller.NervousSystem.NeuronState(i);
+        }
+        // Saved each of their neural states 
+        for (int i = 1; i <= N; i++)
+        {
+            savedStateReceiver[i] = AgentReceiver.NervousSystem.NeuronState(i);
+        }
+
+        // ******* TESTING *********
+
+        for (double ref_var = -2.0; ref_var <= 2.0; ref_var += 2.0){
+                for (double sep_var = -2.0; sep_var <= 2.0; sep_var += 2.0){
+                // Reset
+                AgentReceiver.SetPosition(0);
+                AgentSignaller.SetPosition(0);
+                AgentReceiver.ResetSensors();
+                AgentSignaller.ResetSensors();
+
+                genLandmarks_Simple(ref_var, sep_var, landmarkPositions);
+                food_location = landmarkPositions[env];
+
+                LandmarkFile << ref_var << " ";
+                for (int x = 1; x<= LN; x += 1){
+                    LandmarkFile << landmarkPositions[x] << " ";
+                }
+                LandmarkFile << food_location << " ";
+
+                for (int i= 1; i<=N; i++){
+                    AgentReceiver.NervousSystem.SetNeuronState(i, savedStateReceiver[i]);
+                }
+                for (int i= 1; i<=N; i++){
+                    AgentSignaller.NervousSystem.SetNeuronState(i, savedStateSignaller[i]);
+                }
+
+                // ********* PHASE 2/3 ************
+
+                // record the initial position
+                SignallerBehaviorFile << AgentSignaller.GetPosition() << " ";
+                RecieverBehaviorFile << AgentReceiver.GetPosition() << " ";
+                NeuronS1 << AgentSignaller.NervousSystem.NeuronState(1) << " ";
+                NeuronS2 << AgentSignaller.NervousSystem.NeuronState(2) << " ";
+                NeuronS3 << AgentSignaller.NervousSystem.NeuronState(3) << " ";
+
+                NeuronR1 << AgentReceiver.NervousSystem.NeuronState(1) << " ";
+                NeuronR2 << AgentReceiver.NervousSystem.NeuronState(2) << " ";
+                NeuronR3 << AgentReceiver.NervousSystem.NeuronState(3) << " ";
+
+                double scoringTime = 0.0;
+                double totalScore = 0.0;
+
+                for (double time=0; time < RunDuration*2; time += StepSize){
+                    
+                    AgentReceiver.SenseOther(AgentSignaller.GetPosition());
+                    AgentSignaller.SenseOther(AgentReceiver.GetPosition());
+
+                    AgentReceiver.SenseLandmarks(LN, landmarkPositions);
+
+                    AgentSignaller.SenseFood(food_location);
+
+                    // Move both the agents
+                    // AgentReceiver.SetPosition(0);
+                    AgentReceiver.Step(StepSize);
+                    AgentSignaller.Step(StepSize);
+
+                    // clam the signallers position
+                    double pos = AgentSignaller.GetPosition();
+                    
+                    if (pos > LANDMARKZONESTART){
+                        AgentSignaller.SetPosition(LANDMARKZONESTART);
+                    }
+                    
+
+                    if (time > RunDuration+TransDuration){
+                        distance_food_receiver = fabs(AgentReceiver.GetPosition() - food_location);
+
+                        // if the distance is within a threshold set the score to be perfect
+                        if (distance_food_receiver < 1 && time > HarshDuration+TransDuration+RunDuration){
+                            distance_food_receiver = 0;
+                        } else if (distance_food_receiver < mindist){
+                            distance_food_receiver = 0;
+                        }
+                        totalScore += distance_food_receiver;
+                        scoringTime += 1;
+                        
+                        // length of the landmark zone
+                        double lengthZone = landmarkPositions[LN] - landmarkPositions[1];
+                        
+                        if (scoringTime > 0){
+                            Stage3Fitness << 1 - ((totalScore/scoringTime)/lengthZone) << " ";
+                        }
+                    }
+
+                    SignallerBehaviorFile << AgentSignaller.GetPosition() << " ";
+                    RecieverBehaviorFile << AgentReceiver.GetPosition() << " ";
+                    
+                    // record the neural state at the end of each time step 
+                    NeuronS1 << AgentSignaller.NervousSystem.NeuronState(1) << " ";
+                    NeuronS2 << AgentSignaller.NervousSystem.NeuronState(2) << " ";
+                    NeuronS3 << AgentSignaller.NervousSystem.NeuronState(3) << " ";
+                    NeuronR1 << AgentReceiver.NervousSystem.NeuronState(1) << " ";
+                    NeuronR2 << AgentReceiver.NervousSystem.NeuronState(2) << " ";
+                    NeuronR3 << AgentReceiver.NervousSystem.NeuronState(3) << " ";
+                }
+
+                // length of the landmark zone
+                double lengthZone = landmarkPositions[LN] - landmarkPositions[1];
+
+                // END OF TRIAL
+                // score at the end of this trial
+                double fitness = 0;
+                if (scoringTime > 0){
+                    fitness = 1 - ((totalScore/scoringTime)/lengthZone);
+                    if (fitness < 0.0){
+                        fitness = 0.0;
+                    }
+                    FinalFitness << fitness << " ";
+                }
+
+                // new line for a new trial
+                Stage3Fitness << endl;
+                LandmarkFile << endl;
+                FinalFitness << endl;
+
+                SignallerBehaviorFile << endl;
+                NeuronS1 << endl;
+                NeuronS2 << endl;
+                NeuronS3 << endl;
+
+                RecieverBehaviorFile << endl;
+                NeuronR1 << endl;
+                NeuronR2 << endl;
+                NeuronR3 << endl;        
+            }
+        }
+    }
+    // close the files for that env
+    SignallerBehaviorFile.close();
+    RecieverBehaviorFile.close();
+    Stage3Fitness.close();
+    LandmarkFile.close();
+    NeuronS1.close();
+    NeuronS2.close();
+    NeuronS3.close();
+    NeuronR1.close();
+    NeuronR2.close();
+    NeuronR3.close();
+    FinalFitness.close();
+}
+
 // landmark 1 and 2 fixed varying the position of landmark 2
 
 void Test1(TVector<double>& genotype, int current_run){
@@ -1057,7 +1321,7 @@ int main (int argc, const char* argv[])
     // Define output home directory
     int v = 0;
     // std::string result_dir = "/user/work/yj23812/BeeCommunication/results/"+ date_as_string() +"/" + slurm_job_id;
-    std::string result_dir = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/"+ date_as_string() +"/5";
+    std::string result_dir = "/Users/katiepambakian/Documents/BSc Computer Science/Y3/Dissertation/BeeCommunication/results/"+ date_as_string() +"/7";
 
     // make the genotypes into TVector
     dir = result_dir +"/batch_"+ batch_number +"/network_"+ std::to_string(1) +"/";
@@ -1077,8 +1341,9 @@ int main (int argc, const char* argv[])
     );
 
     // Test1(genotype_tvector1, 1);
-    Test2(genotype_tvector1, 1);
+    // Test2(genotype_tvector1, 1);
     // Test3(genotype_tvector1, 1);
+    SignallerBehaviourTest(genotype_tvector1, 1);
 
     // make the genotypes into TVector
     dir = result_dir +"/batch_"+ batch_number +"/network_"+ std::to_string(2) +"/";
@@ -1098,7 +1363,7 @@ int main (int argc, const char* argv[])
     );
 
     // Test1(genotype_tvector2, 2);
-    Test2(genotype_tvector2, 2);
+    // Test2(genotype_tvector2, 2);
     // Test3(genotype_tvector2, 2);
 
     // make the genotypes into TVector
@@ -1119,7 +1384,7 @@ int main (int argc, const char* argv[])
     );
 
     // Test1(genotype_tvector3, 3);
-    Test2(genotype_tvector3, 3);
+    // Test2(genotype_tvector3, 3);
     // Test3(genotype_tvector3, 3);
 
     // make the genotypes into TVector
@@ -1140,7 +1405,7 @@ int main (int argc, const char* argv[])
     );
 
     // Test1(genotype_tvector4, 4);
-    Test2(genotype_tvector4, 4);
+    // Test2(genotype_tvector4, 4);
     // Test3(genotype_tvector4, 4);
 
     return 0;

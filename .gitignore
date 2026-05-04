@@ -7,3 +7,4 @@ build/
 .venv
 results/
 poster-graphs/
+.DS_Store
